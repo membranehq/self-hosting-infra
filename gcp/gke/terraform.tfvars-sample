@@ -1,0 +1,13 @@
+environment                   = "<your-environment-dev-test-stage-prod>"
+project                       = "integration-app"
+gcp_project_id                = "integration-app-ryvn"
+gcp_region                    = "europe-west3"
+dns_zone_name                 = "<your-dns-zone-name>"
+domain_name                   = "<your-domain-name>"
+enable_cdn                    = true
+kubernetes_namespace          = "<your-kubernetes-namespace>"
+vpc_name                      = "<your-gke-vpc-name>"
+subnet_name                   = "<your-gke-vpc-subnet-name>"
+redis_memory_size_gb          = 1
+redis_tier                    = "BASIC"
+redis_version                 = "REDIS_7_0"

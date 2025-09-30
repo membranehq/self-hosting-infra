@@ -1,0 +1,16 @@
+environment = "<your environment>"
+AWS_REGION = "<your aws region>"
+aws_profile = "<your aws profile>"
+
+# Auth0 Configuration
+auth0_domain = "<your auth0 domain>"
+auth0_client_id = "<your auth0 client id>"
+auth0_client_secret = "<your auth0 client secret>"
+
+# Harbor Credentials
+harbor_username = "<your harbor username>"
+harbor_password = "<your harbor password>"
+
+# AI API keys
+openai_api_key = "<your openai api key>"
+anthropic_api_key = "<your anthropic api key>"

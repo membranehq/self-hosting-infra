@@ -1,0 +1,10 @@
+environment                  = "<your-environment-dev-test-stage-prod>"
+location                     = "<your-aks-resource-group-location>"
+project                      = "integration-app"
+resource_group_name          = "<your-resource-group-name"
+dns_zone_name                = "<your-dns-zone-name>"
+enable_managed_database      = true  # Set to false if using external MongoDB
+aks_cluster_name             = "<your-aks-cluster-name>"
+kubernetes_namespace         = "<your-kubernetes-namespace>"
+aks_vnet_name                = "<your-aks-vnet-name>"
+private_endpoint_subnet_cidr = "<your-aks-private-endpoint-subnet-cidr>"
