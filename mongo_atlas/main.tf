@@ -1,5 +1,4 @@
 terraform {
-  backend "kubernetes" {}
 
   required_providers {
     mongodbatlas = {

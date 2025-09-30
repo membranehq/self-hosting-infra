@@ -1,5 +1,4 @@
-It is a possible option to use AWS DocumentDB. But we support only MongoDB Atlas.
-
+# It is a possible option to use AWS DocumentDB. But we support only MongoDB Atlas.
 resource "aws_security_group" "docdb" {
   name        = "docdb-sg-${var.environment}"
   description = "Security group for DocumentDB"

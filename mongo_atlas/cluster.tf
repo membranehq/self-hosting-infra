@@ -13,13 +13,13 @@ resource "mongodbatlas_advanced_cluster" "integration_app" {
   backup_enabled = var.cloud_backup_enabled
 
   # Replication specs for the cluster
-  replication_specs {
-    region_configs {
-      electable_specs {
+  replication_specs = {
+    region_configs = {
+      electable_specs = {
         instance_size = var.instance_size
         node_count    = var.num_nodes
       }
-      analytics_specs {
+      analytics_specs = {
         instance_size = var.instance_size
         node_count    = var.num_analytic_nodes
       }
@@ -27,7 +27,7 @@ resource "mongodbatlas_advanced_cluster" "integration_app" {
       region_name   = var.provider_region
       priority      = 7
 
-      auto_scaling {
+      auto_scaling = {
         disk_gb_enabled = var.auto_scaling_disk_enabled
         compute_enabled = var.auto_scaling_compute_enabled
 
@@ -39,7 +39,7 @@ resource "mongodbatlas_advanced_cluster" "integration_app" {
   }
 
   # Advanced configuration
-  advanced_configuration {
+  advanced_configuration = {
     javascript_enabled                 = true
     minimum_enabled_tls_protocol       = "TLS1_2"
     no_table_scan                      = false
