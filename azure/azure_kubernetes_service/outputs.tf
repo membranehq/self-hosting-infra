@@ -6,12 +6,6 @@ output "connectors_bucket_name" {
   value = azurerm_storage_container.connectors.name
 }
 
-# Public CosmosDB connection string
-output "cosmosdb_connection_string" {
-  value     = var.enable_managed_database ? azurerm_cosmosdb_account.main[0].primary_mongodb_connection_string : ""
-  sensitive = true
-}
-
 # Private Redis URI (for services in AKS cluster) - uses hostname with non-SSL for private network
 # output "redis_uri_private" {
 #   value     = "redis://:${azurerm_redis_cache.main.primary_access_key}@${azurerm_private_endpoint.redis.private_service_connection[0].private_ip_address}:${azurerm_redis_cache.main.port}"

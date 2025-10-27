@@ -43,11 +43,6 @@ resource "azurerm_container_app" "api" {
     value = random_password.encryption_secret.result
   }
 
-  secret {
-    name  = "mongo-uri"
-    value = "mongodb://${azurerm_cosmosdb_account.main.name}:${azurerm_cosmosdb_account.main.primary_key}@${azurerm_cosmosdb_account.main.name}.mongo.cosmos.azure.com:10255/integration-app?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${azurerm_cosmosdb_account.main.name}@"
-  }
-
   template {
     container {
       name   = "api"
@@ -126,10 +121,6 @@ resource "azurerm_container_app" "api" {
       env {
         name        = "ENCRYPTION_SECRET"
         secret_name = "encryption-secret"
-      }
-      env {
-        name        = "MONGO_URI"
-        secret_name = "mongo-uri"
       }
       env {
         name  = "STORAGE_PROVIDER"

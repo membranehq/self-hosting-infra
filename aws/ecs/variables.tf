@@ -29,12 +29,6 @@ variable "auth0_client_secret" {
   sensitive   = true
 }
 
-variable "docdb_username" {
-  description = "DocumentDB username"
-  type        = string
-  default     = "integration_app"
-}
-
 variable "harbor_username" {
   description = "Harbor username"
   type        = string

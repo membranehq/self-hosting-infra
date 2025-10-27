@@ -55,11 +55,6 @@ output "dns_zone_name_servers" {
   value       = azurerm_dns_zone.main.name_servers
 }
 
-output "cosmosdb_endpoint" {
-  description = "Cosmos DB endpoint"
-  value       = azurerm_cosmosdb_account.main.endpoint
-}
-
 output "redis_hostname" {
   description = "Redis cache hostname"
   value       = azurerm_redis_cache.main.hostname

@@ -47,12 +47,6 @@ variable "auth0_client_secret" {
   sensitive   = true
 }
 
-variable "cosmosdb_username" {
-  description = "Cosmos DB username"
-  type        = string
-  default     = "integration_app"
-}
-
 variable "harbor_username" {
   description = "Harbor username"
   type        = string

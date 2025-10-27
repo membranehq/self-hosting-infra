@@ -51,36 +51,6 @@ variable "hosted_zone_name" {
   default     = "int-membrane.com"
 }
 
-variable "enable_managed_database" {
-  description = "Enable creation of managed database (DocumentDB)"
-  type        = bool
-  default     = true
-}
-
-variable "docdb_username" {
-  description = "DocumentDB username"
-  type        = string
-  default     = "integration_app"
-}
-
-variable "docdb_password" {
-  description = "DocumentDB username"
-  type        = string
-  sensitive   = true
-}
-
-variable "documentdb_instance_class" {
-  description = "DocumentDB instance class"
-  type        = string
-  default     = "db.t3.medium"
-}
-
-variable "docdb_family" {
-  description = "DocumentDB cluster parameter group family"
-  type        = string
-  default     = "docdb5.0"
-}
-
 variable "redis_node_type" {
   description = "Redis node type"
   type        = string
