@@ -2,10 +2,7 @@ environment               = "<your-environment-dev-test-stage-prod>"
 aws_region                = "<aws-region-of-your-eks>"
 route53_zone_id           = "<your-route53-hosted-zone-id"
 hosted_zone_name          = "<your-route53-hosted-zone-name>"
-enable_managed_database   = true  # Set to false if using external MongoDB
-docdb_username            = "integration_app"
-docdb_password            = "<strong-url-safe-password>"
-documentdb_instance_class = "db.t3.medium"
+
 redis_node_type           = "cache.t3.micro"
 vpc_id                    = "<your-eks-vpc-id>"
 public_subnet_ids         = ["<your-eks-public-subnet-ids>"]

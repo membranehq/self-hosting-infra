@@ -47,10 +47,10 @@ resource "azurerm_key_vault_secret" "encryption_secret" {
 
 resource "azurerm_key_vault_secret" "cosmosdb_connection" {
   name         = "cosmosdb-connection"
-  value        = "mongodb://${var.cosmosdb_username}:${random_password.cosmosdb_password.result}@${azurerm_cosmosdb_account.main.name}.mongo.cosmos.azure.com:10255/integration-app?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000&appName=@${azurerm_cosmosdb_account.main.name}@"
+  value        = var.mongo_uri
   key_vault_id = azurerm_key_vault.main.id
 
-  depends_on = [azurerm_key_vault.main, azurerm_cosmosdb_account.main]
+  depends_on = [azurerm_key_vault.main, ]
 }
 
 resource "azurerm_key_vault_secret" "harbor_credentials" {

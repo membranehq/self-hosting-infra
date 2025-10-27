@@ -47,10 +47,10 @@ variable "auth0_client_secret" {
   sensitive   = true
 }
 
-variable "cosmosdb_username" {
-  description = "Cosmos DB username"
+variable "mongo_uri" {
+  description = "MongoDB URI"
   type        = string
-  default     = "integration_app"
+  sensitive   = true
 }
 
 variable "harbor_username" {

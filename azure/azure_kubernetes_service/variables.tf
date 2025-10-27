@@ -49,9 +49,3 @@ variable "private_endpoint_subnet_cidr" {
   type        = string
   default     = null
 }
-
-variable "enable_managed_database" {
-  description = "Enable creation of managed database (CosmosDB)"
-  type        = bool
-  default     = true
-}

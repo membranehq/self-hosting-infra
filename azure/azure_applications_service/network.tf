@@ -33,7 +33,6 @@ resource "azurerm_subnet" "container_apps" {
 
   service_endpoints = [
     "Microsoft.Storage",
-    "Microsoft.AzureCosmosDB",
     "Microsoft.KeyVault"
   ]
 }
@@ -46,8 +45,7 @@ resource "azurerm_subnet" "data" {
   address_prefixes     = ["10.0.3.0/24"]
 
   service_endpoints = [
-    "Microsoft.Storage",
-    "Microsoft.AzureCosmosDB"
+    "Microsoft.Storage"
   ]
 }
 
@@ -97,20 +95,8 @@ resource "azurerm_network_security_group" "data" {
   resource_group_name = azurerm_resource_group.main.name
 
   security_rule {
-    name                       = "allow-cosmos-from-containers"
-    priority                   = 100
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "10255"
-    source_address_prefix      = azurerm_subnet.container_apps.address_prefixes[0]
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
     name                       = "allow-redis-from-containers"
-    priority                   = 101
+    priority                   = 100
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"

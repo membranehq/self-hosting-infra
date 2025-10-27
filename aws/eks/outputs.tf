@@ -10,11 +10,6 @@ output "static_bucket_name" {
   value = aws_s3_bucket.static.bucket
 }
 
-output "documentdb_uri" {
-  value     = var.enable_managed_database ? "mongodb://${var.docdb_username}:${var.docdb_password}@${aws_docdb_cluster.main[0].endpoint}:27017/engine-${var.environment}?tls=true&tlsCAFile=%2Fetc%2Fssl%2Fcerts%2Frds-global-bundle.pem&authMechanism=SCRAM-SHA-1&replicaSet=rs0&retryWrites=false" : ""
-  sensitive = true
-}
-
 output "redis_uri" {
   value     = "redis://${aws_elasticache_replication_group.main.primary_endpoint_address}:6379"
   sensitive = true

@@ -133,8 +133,8 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_ssm_parameters" {
   policy_arn = aws_iam_policy.ecs_execution_ssm_parameters.arn
 }
 
-resource "aws_iam_role_policy" "ecs_execution_docdb_secret" {
-  name = "${var.environment}-ecs-execution-docdb-secret"
+resource "aws_iam_role_policy" "ecs_execution_secret" {
+  name = "${var.environment}-ecs-execution-secret"
   role = aws_iam_role.ecs_execution.id
 
   policy = jsonencode({
