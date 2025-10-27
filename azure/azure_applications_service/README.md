@@ -29,13 +29,12 @@ This Terraform module deploys the Integration.app application stack on Azure, pr
 5. **Azure Key Vault** - Secrets management for:
    - JWT signing secret
    - Encryption secret
-   - Database connection strings
    - Harbor registry credentials
 
 6. **Virtual Network** - Network isolation with subnets:
    - Container subnet (10.0.1.0/24) - For Container Instances
    - Container Apps subnet (10.0.2.0/24) - For Container Apps
-   - Data subnet (10.0.3.0/24) - For databases and cache
+   - Data subnet (10.0.3.0/24) - For cache
 
 ## Prerequisites
 
