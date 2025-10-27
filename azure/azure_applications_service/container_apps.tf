@@ -123,6 +123,10 @@ resource "azurerm_container_app" "api" {
         secret_name = "encryption-secret"
       }
       env {
+        name        = "MONGO_URI"
+        secret_name = "mongo-uri"
+      }
+      env {
         name  = "STORAGE_PROVIDER"
         value = "abs"
       }

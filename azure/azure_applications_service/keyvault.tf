@@ -45,6 +45,14 @@ resource "azurerm_key_vault_secret" "encryption_secret" {
   depends_on = [azurerm_key_vault.main]
 }
 
+resource "azurerm_key_vault_secret" "cosmosdb_connection" {
+  name         = "cosmosdb-connection"
+  value        = var.mongo_uri
+  key_vault_id = azurerm_key_vault.main.id
+
+  depends_on = [azurerm_key_vault.main, ]
+}
+
 resource "azurerm_key_vault_secret" "harbor_credentials" {
   name = "harbor-credentials"
   value = jsonencode({

@@ -47,6 +47,12 @@ variable "auth0_client_secret" {
   sensitive   = true
 }
 
+variable "mongo_uri" {
+  description = "MongoDB URI"
+  type        = string
+  sensitive   = true
+}
+
 variable "harbor_username" {
   description = "Harbor username"
   type        = string
