@@ -60,7 +60,7 @@ resource "azurerm_container_app" "api" {
         value = "production"
       }
       env {
-        name  = "IS_WORKER"
+        name  = "IS_API"
         value = "1"
       }
       env {
@@ -326,6 +326,413 @@ resource "azurerm_container_app" "custom_code_runner" {
       percentage      = 100
       latest_revision = true
     }
+  }
+
+  tags = local.common_tags
+}
+
+# Instant Tasks Worker Container App
+resource "azurerm_container_app" "instant_tasks_worker" {
+  name                         = "${var.environment}-${var.project}-instantworker-ca"
+  container_app_environment_id = azurerm_container_app_environment.main.id
+  resource_group_name          = azurerm_resource_group.main.name
+  revision_mode                = "Single"
+
+  registry {
+    server               = var.harbor_host
+    username             = var.harbor_username
+    password_secret_name = "harbor-password"
+  }
+
+  secret {
+    name  = "harbor-password"
+    value = var.harbor_password
+  }
+
+  secret {
+    name  = "jwt-secret"
+    value = random_password.secret.result
+  }
+
+  secret {
+    name  = "encryption-secret"
+    value = random_password.encryption_secret.result
+  }
+
+  secret {
+    name  = "mongo-uri"
+    value = var.mongo_uri
+  }
+
+  template {
+    container {
+      name   = "instant-tasks-worker"
+      image  = "${var.harbor_host}/core/api:${var.image_tag}"
+      cpu    = var.instant_tasks_worker_cpu
+      memory = var.instant_tasks_worker_memory
+
+      env {
+        name  = "NODE_ENV"
+        value = "production"
+      }
+      env {
+        name  = "IS_INSTANT_TASKS_WORKER"
+        value = "1"
+      }
+      env {
+        name  = "BASE_URI"
+        value = "https://${local.api_hostname}"
+      }
+      env {
+        name  = "BASE_URI_INTERNAL"
+        value = "https://${local.api_hostname}"
+      }
+      env {
+        name  = "CUSTOM_CODE_RUNNER_URI"
+        value = "https://${azurerm_container_app.custom_code_runner.latest_revision_fqdn}"
+      }
+      env {
+        name  = "AUTH0_DOMAIN"
+        value = var.auth0_domain
+      }
+      env {
+        name  = "AUTH0_CLIENT_ID"
+        value = var.auth0_client_id
+      }
+      env {
+        name  = "AUTH0_CLIENT_SECRET"
+        value = var.auth0_client_secret
+      }
+      env {
+        name  = "TMP_S3_BUCKET"
+        value = azurerm_storage_container.tmp.name
+      }
+      env {
+        name  = "CONNECTORS_S3_BUCKET"
+        value = azurerm_storage_container.connectors.name
+      }
+      env {
+        name  = "STATIC_S3_BUCKET"
+        value = "$web"
+      }
+      env {
+        name  = "BASE_STATIC_URI"
+        value = "https://${local.static_hostname}"
+      }
+      env {
+        name  = "REDIS_URI"
+        value = "rediss://:${azurerm_managed_redis.managed_redis.default_database[0].primary_access_key}@${azurerm_managed_redis.managed_redis.hostname}:10000"
+      }
+      env {
+        name  = "PORT"
+        value = "5000"
+      }
+      env {
+        name  = "HOST"
+        value = "0.0.0.0"
+      }
+      env {
+        name  = "AZURE_STORAGE_ACCOUNT_NAME"
+        value = azurerm_storage_account.main.name
+      }
+      env {
+        name  = "AZURE_STORAGE_CONNECTION_STRING"
+        value = azurerm_storage_account.main.primary_connection_string
+      }
+      env {
+        name        = "SECRET"
+        secret_name = "jwt-secret"
+      }
+      env {
+        name        = "ENCRYPTION_SECRET"
+        secret_name = "encryption-secret"
+      }
+      env {
+        name        = "MONGO_URI"
+        secret_name = "mongo-uri"
+      }
+      env {
+        name  = "STORAGE_PROVIDER"
+        value = "abs"
+      }
+    }
+
+    min_replicas = var.instant_tasks_worker_min_replicas
+    max_replicas = var.instant_tasks_worker_max_replicas
+  }
+
+  tags = local.common_tags
+}
+
+# Queued Tasks Worker Container App
+resource "azurerm_container_app" "queued_tasks_worker" {
+  name                         = "${var.environment}-${var.project}-queuedworker-ca"
+  container_app_environment_id = azurerm_container_app_environment.main.id
+  resource_group_name          = azurerm_resource_group.main.name
+  revision_mode                = "Single"
+
+  registry {
+    server               = var.harbor_host
+    username             = var.harbor_username
+    password_secret_name = "harbor-password"
+  }
+
+  secret {
+    name  = "harbor-password"
+    value = var.harbor_password
+  }
+
+  secret {
+    name  = "jwt-secret"
+    value = random_password.secret.result
+  }
+
+  secret {
+    name  = "encryption-secret"
+    value = random_password.encryption_secret.result
+  }
+
+  secret {
+    name  = "mongo-uri"
+    value = var.mongo_uri
+  }
+
+  template {
+    container {
+      name   = "queued-tasks-worker"
+      image  = "${var.harbor_host}/core/api:${var.image_tag}"
+      cpu    = var.queued_tasks_worker_cpu
+      memory = var.queued_tasks_worker_memory
+
+      env {
+        name  = "NODE_ENV"
+        value = "production"
+      }
+      env {
+        name  = "IS_QUEUED_TASKS_WORKER"
+        value = "1"
+      }
+      env {
+        name  = "BASE_URI"
+        value = "https://${local.api_hostname}"
+      }
+      env {
+        name  = "BASE_URI_INTERNAL"
+        value = "https://${local.api_hostname}"
+      }
+      env {
+        name  = "CUSTOM_CODE_RUNNER_URI"
+        value = "https://${azurerm_container_app.custom_code_runner.latest_revision_fqdn}"
+      }
+      env {
+        name  = "AUTH0_DOMAIN"
+        value = var.auth0_domain
+      }
+      env {
+        name  = "AUTH0_CLIENT_ID"
+        value = var.auth0_client_id
+      }
+      env {
+        name  = "AUTH0_CLIENT_SECRET"
+        value = var.auth0_client_secret
+      }
+      env {
+        name  = "TMP_S3_BUCKET"
+        value = azurerm_storage_container.tmp.name
+      }
+      env {
+        name  = "CONNECTORS_S3_BUCKET"
+        value = azurerm_storage_container.connectors.name
+      }
+      env {
+        name  = "STATIC_S3_BUCKET"
+        value = "$web"
+      }
+      env {
+        name  = "BASE_STATIC_URI"
+        value = "https://${local.static_hostname}"
+      }
+      env {
+        name  = "REDIS_URI"
+        value = "rediss://:${azurerm_managed_redis.managed_redis.default_database[0].primary_access_key}@${azurerm_managed_redis.managed_redis.hostname}:10000"
+      }
+      env {
+        name  = "PORT"
+        value = "5000"
+      }
+      env {
+        name  = "HOST"
+        value = "0.0.0.0"
+      }
+      env {
+        name  = "AZURE_STORAGE_ACCOUNT_NAME"
+        value = azurerm_storage_account.main.name
+      }
+      env {
+        name  = "AZURE_STORAGE_CONNECTION_STRING"
+        value = azurerm_storage_account.main.primary_connection_string
+      }
+      env {
+        name        = "SECRET"
+        secret_name = "jwt-secret"
+      }
+      env {
+        name        = "ENCRYPTION_SECRET"
+        secret_name = "encryption-secret"
+      }
+      env {
+        name        = "MONGO_URI"
+        secret_name = "mongo-uri"
+      }
+      env {
+        name  = "STORAGE_PROVIDER"
+        value = "abs"
+      }
+      env {
+        name  = "MAX_QUEUED_TASKS_MEMORY_MB"
+        value = "1024"
+      }
+      env {
+        name  = "MAX_QUEUED_TASKS_PROCESS_TIME_SECONDS"
+        value = "3000"
+      }
+    }
+
+    min_replicas = var.queued_tasks_worker_min_replicas
+    max_replicas = var.queued_tasks_worker_max_replicas
+  }
+
+  tags = local.common_tags
+}
+
+# Orchestrator Container App
+resource "azurerm_container_app" "orchestrator" {
+  name                         = "${var.environment}-${var.project}-orchestrator-ca"
+  container_app_environment_id = azurerm_container_app_environment.main.id
+  resource_group_name          = azurerm_resource_group.main.name
+  revision_mode                = "Single"
+
+  registry {
+    server               = var.harbor_host
+    username             = var.harbor_username
+    password_secret_name = "harbor-password"
+  }
+
+  secret {
+    name  = "harbor-password"
+    value = var.harbor_password
+  }
+
+  secret {
+    name  = "jwt-secret"
+    value = random_password.secret.result
+  }
+
+  secret {
+    name  = "encryption-secret"
+    value = random_password.encryption_secret.result
+  }
+
+  secret {
+    name  = "mongo-uri"
+    value = var.mongo_uri
+  }
+
+  template {
+    container {
+      name   = "orchestrator"
+      image  = "${var.harbor_host}/core/api:${var.image_tag}"
+      cpu    = var.orchestrator_cpu
+      memory = var.orchestrator_memory
+
+      env {
+        name  = "NODE_ENV"
+        value = "production"
+      }
+      env {
+        name  = "IS_ORCHESTRATOR"
+        value = "1"
+      }
+      env {
+        name  = "BASE_URI"
+        value = "https://${local.api_hostname}"
+      }
+      env {
+        name  = "BASE_URI_INTERNAL"
+        value = "https://${local.api_hostname}"
+      }
+      env {
+        name  = "CUSTOM_CODE_RUNNER_URI"
+        value = "https://${azurerm_container_app.custom_code_runner.latest_revision_fqdn}"
+      }
+      env {
+        name  = "AUTH0_DOMAIN"
+        value = var.auth0_domain
+      }
+      env {
+        name  = "AUTH0_CLIENT_ID"
+        value = var.auth0_client_id
+      }
+      env {
+        name  = "AUTH0_CLIENT_SECRET"
+        value = var.auth0_client_secret
+      }
+      env {
+        name  = "TMP_S3_BUCKET"
+        value = azurerm_storage_container.tmp.name
+      }
+      env {
+        name  = "CONNECTORS_S3_BUCKET"
+        value = azurerm_storage_container.connectors.name
+      }
+      env {
+        name  = "STATIC_S3_BUCKET"
+        value = "$web"
+      }
+      env {
+        name  = "BASE_STATIC_URI"
+        value = "https://${local.static_hostname}"
+      }
+      env {
+        name  = "REDIS_URI"
+        value = "rediss://:${azurerm_managed_redis.managed_redis.default_database[0].primary_access_key}@${azurerm_managed_redis.managed_redis.hostname}:10000"
+      }
+      env {
+        name  = "PORT"
+        value = "5000"
+      }
+      env {
+        name  = "HOST"
+        value = "0.0.0.0"
+      }
+      env {
+        name  = "AZURE_STORAGE_ACCOUNT_NAME"
+        value = azurerm_storage_account.main.name
+      }
+      env {
+        name  = "AZURE_STORAGE_CONNECTION_STRING"
+        value = azurerm_storage_account.main.primary_connection_string
+      }
+      env {
+        name        = "SECRET"
+        secret_name = "jwt-secret"
+      }
+      env {
+        name        = "ENCRYPTION_SECRET"
+        secret_name = "encryption-secret"
+      }
+      env {
+        name        = "MONGO_URI"
+        secret_name = "mongo-uri"
+      }
+      env {
+        name  = "STORAGE_PROVIDER"
+        value = "abs"
+      }
+    }
+
+    min_replicas = var.orchestrator_min_replicas
+    max_replicas = var.orchestrator_max_replicas
   }
 
   tags = local.common_tags

@@ -43,10 +43,13 @@ output "custom_domain_urls" {
 output "container_app_urls" {
   description = "Container App URLs"
   value = {
-    api                = "https://${azurerm_container_app.api.latest_revision_fqdn}"
-    ui                 = "https://${azurerm_container_app.ui.latest_revision_fqdn}"
-    console            = "https://${azurerm_container_app.console.latest_revision_fqdn}"
-    custom_code_runner = "https://${azurerm_container_app.custom_code_runner.latest_revision_fqdn}"
+    api                  = "https://${azurerm_container_app.api.latest_revision_fqdn}"
+    ui                   = "https://${azurerm_container_app.ui.latest_revision_fqdn}"
+    console              = "https://${azurerm_container_app.console.latest_revision_fqdn}"
+    custom_code_runner   = "https://${azurerm_container_app.custom_code_runner.latest_revision_fqdn}"
+    instant_tasks_worker = "https://${azurerm_container_app.instant_tasks_worker.latest_revision_fqdn}"
+    queued_tasks_worker  = "https://${azurerm_container_app.queued_tasks_worker.latest_revision_fqdn}"
+    orchestrator         = "https://${azurerm_container_app.orchestrator.latest_revision_fqdn}"
   }
 }
 

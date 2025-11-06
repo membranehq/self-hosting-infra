@@ -193,3 +193,78 @@ variable "runner_max_replicas" {
   type        = number
   default     = 10
 }
+
+# Container App - Instant Tasks Worker
+variable "instant_tasks_worker_cpu" {
+  description = "CPU allocation for Instant Tasks Worker container"
+  type        = number
+  default     = 0.5
+}
+
+variable "instant_tasks_worker_memory" {
+  description = "Memory allocation for Instant Tasks Worker container"
+  type        = string
+  default     = "1Gi"
+}
+
+variable "instant_tasks_worker_min_replicas" {
+  description = "Minimum number of replicas for Instant Tasks Worker"
+  type        = number
+  default     = 2
+}
+
+variable "instant_tasks_worker_max_replicas" {
+  description = "Maximum number of replicas for Instant Tasks Worker"
+  type        = number
+  default     = 10
+}
+
+# Container App - Queued Tasks Worker
+variable "queued_tasks_worker_cpu" {
+  description = "CPU allocation for Queued Tasks Worker container"
+  type        = number
+  default     = 0.5
+}
+
+variable "queued_tasks_worker_memory" {
+  description = "Memory allocation for Queued Tasks Worker container"
+  type        = string
+  default     = "1Gi"
+}
+
+variable "queued_tasks_worker_min_replicas" {
+  description = "Minimum number of replicas for Queued Tasks Worker"
+  type        = number
+  default     = 2
+}
+
+variable "queued_tasks_worker_max_replicas" {
+  description = "Maximum number of replicas for Queued Tasks Worker"
+  type        = number
+  default     = 10
+}
+
+# Container App - Orchestrator
+variable "orchestrator_cpu" {
+  description = "CPU allocation for Orchestrator container"
+  type        = number
+  default     = 0.5
+}
+
+variable "orchestrator_memory" {
+  description = "Memory allocation for Orchestrator container"
+  type        = string
+  default     = "1Gi"
+}
+
+variable "orchestrator_min_replicas" {
+  description = "Minimum number of replicas for Orchestrator"
+  type        = number
+  default     = 2
+}
+
+variable "orchestrator_max_replicas" {
+  description = "Maximum number of replicas for Orchestrator"
+  type        = number
+  default     = 2
+}
