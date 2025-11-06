@@ -114,3 +114,24 @@ resource "azurerm_subnet_network_security_group_association" "data" {
   subnet_id                 = azurerm_subnet.data.id
   network_security_group_id = azurerm_network_security_group.data.id
 }
+
+resource "azurerm_private_endpoint" "membrane_redis_pe" {
+  name                = "${var.environment}-${var.project}-redis-pe"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  subnet_id           = azurerm_subnet.container_apps.id
+
+  private_service_connection {
+    name                           = "dev-membrane-redis-pe_844d736b-ae89-4a30-a5a3-0cba52b4301f"
+    private_connection_resource_id = "/subscriptions/8efa5445-aa5c-402c-9975-80616017c233/resourceGroups/membrane-rg/providers/Microsoft.Cache/RedisEnterprise/dev-membrane"
+    is_manual_connection           = false
+    subresource_names = ["redisEnterprise"]
+  }
+
+  private_dns_zone_group {
+    name = "default"
+    private_dns_zone_ids = [
+      "/subscriptions/8efa5445-aa5c-402c-9975-80616017c233/resourceGroups/membrane-rg/providers/Microsoft.Network/privateDnsZones/privatelink.redis.azure.net",
+    ]
+  }
+}

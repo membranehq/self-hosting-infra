@@ -14,3 +14,19 @@ resource "azurerm_redis_cache" "main" {
 
   tags = local.common_tags
 }
+
+resource "azurerm_managed_redis" "managed_redis" {
+  name                = "${var.environment}-${var.project}"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  sku_name            = "Balanced_B0"
+
+  default_database {
+    access_keys_authentication_enabled = false
+    client_protocol                    = "Encrypted"
+    clustering_policy                  = "EnterpriseCluster"
+    eviction_policy                    = "NoEviction"
+  }
+
+  tags = local.common_tags
+}
