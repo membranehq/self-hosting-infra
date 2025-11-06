@@ -1,15 +1,13 @@
 resource "azurerm_dns_zone" "main" {
-  name                = "azure.int-membrane.com"
+  name                = var.domain_name
   resource_group_name = azurerm_resource_group.main.name
 
-  tags = {
-    Service = "core-azure"
-  }
+  tags = local.common_tags
 }
 
 # Static validation record
 resource "azurerm_dns_txt_record" "afd_static_validation" {
-  name                = "_dnsauth.static"
+  name                = "_dnsauth.static${var.environment == "prod" ? "" : ".${var.environment}"}"
   zone_name           = azurerm_dns_zone.main.name
   resource_group_name = azurerm_resource_group.main.name
   ttl                 = 3600
@@ -21,7 +19,7 @@ resource "azurerm_dns_txt_record" "afd_static_validation" {
 
 # API validation record
 resource "azurerm_dns_txt_record" "afd_api_validation" {
-  name                = "_dnsauth.api"
+  name                = "_dnsauth.api${var.environment == "prod" ? "" : ".${var.environment}"}"
   zone_name           = azurerm_dns_zone.main.name
   resource_group_name = azurerm_resource_group.main.name
   ttl                 = 3600
@@ -33,7 +31,7 @@ resource "azurerm_dns_txt_record" "afd_api_validation" {
 
 # UI validation record
 resource "azurerm_dns_txt_record" "afd_ui_validation" {
-  name                = "_dnsauth.ui"
+  name                = "_dnsauth.ui${var.environment == "prod" ? "" : ".${var.environment}"}"
   zone_name           = azurerm_dns_zone.main.name
   resource_group_name = azurerm_resource_group.main.name
   ttl                 = 3600
@@ -45,7 +43,7 @@ resource "azurerm_dns_txt_record" "afd_ui_validation" {
 
 # Console validation record
 resource "azurerm_dns_txt_record" "afd_console_validation" {
-  name                = "_dnsauth.console"
+  name                = "_dnsauth.console${var.environment == "prod" ? "" : ".${var.environment}"}"
   zone_name           = azurerm_dns_zone.main.name
   resource_group_name = azurerm_resource_group.main.name
   ttl                 = 3600
@@ -57,7 +55,7 @@ resource "azurerm_dns_txt_record" "afd_console_validation" {
 
 # CNAME Records
 resource "azurerm_dns_cname_record" "static" {
-  name                = "static"
+  name                = "static${var.environment == "prod" ? "" : ".${var.environment}"}"
   zone_name           = azurerm_dns_zone.main.name
   resource_group_name = azurerm_resource_group.main.name
   ttl                 = 3600
@@ -67,7 +65,7 @@ resource "azurerm_dns_cname_record" "static" {
 }
 
 resource "azurerm_dns_cname_record" "api" {
-  name                = "api"
+  name                = "api${var.environment == "prod" ? "" : ".${var.environment}"}"
   zone_name           = azurerm_dns_zone.main.name
   resource_group_name = azurerm_resource_group.main.name
   ttl                 = 3600
@@ -77,7 +75,7 @@ resource "azurerm_dns_cname_record" "api" {
 }
 
 resource "azurerm_dns_cname_record" "ui" {
-  name                = "ui"
+  name                = "ui${var.environment == "prod" ? "" : ".${var.environment}"}"
   zone_name           = azurerm_dns_zone.main.name
   resource_group_name = azurerm_resource_group.main.name
   ttl                 = 3600
@@ -87,7 +85,7 @@ resource "azurerm_dns_cname_record" "ui" {
 }
 
 resource "azurerm_dns_cname_record" "console" {
-  name                = "console"
+  name                = "console${var.environment == "prod" ? "" : ".${var.environment}"}"
   zone_name           = azurerm_dns_zone.main.name
   resource_group_name = azurerm_resource_group.main.name
   ttl                 = 3600

@@ -1,6 +1,6 @@
 # Single Storage Account for all storage needs
 resource "azurerm_storage_account" "main" {
-  name                             = "${var.environment}membrane"
+  name                             = "${var.environment}${var.project}storagesta"
   resource_group_name              = azurerm_resource_group.main.name
   location                         = azurerm_resource_group.main.location
   account_tier                     = "Standard"
@@ -24,21 +24,21 @@ resource "azurerm_storage_account" "main" {
 
 # Container for temporary files
 resource "azurerm_storage_container" "tmp" {
-  name                  = "membrane-${var.environment}-temp"
+  name                  = "${var.environment}-${var.project}-temp-container"
   storage_account_id    = azurerm_storage_account.main.id
   container_access_type = "private"
 }
 
 # Container for connectors
 resource "azurerm_storage_container" "connectors" {
-  name                  = "membrane-connectors"
+  name                  = "${var.environment}-${var.project}-connectors-container"
   storage_account_id    = azurerm_storage_account.main.id
   container_access_type = "private"
 }
 
 # Container for copilot
 resource "azurerm_storage_container" "copilot" {
-  name                  = "membrane-copilot"
+  name                  = "${var.environment}-${var.project}-copilot-container"
   storage_account_id    = azurerm_storage_account.main.id
   container_access_type = "private"
 }

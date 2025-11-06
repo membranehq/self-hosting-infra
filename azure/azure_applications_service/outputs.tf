@@ -33,10 +33,10 @@ output "afd_endpoint_urls" {
 output "custom_domain_urls" {
   description = "The custom domain URLs"
   value = {
-    static  = "https://static.azure.int-membrane.com"
-    api     = "https://api.azure.int-membrane.com"
-    ui      = "https://ui.azure.int-membrane.com"
-    console = "https://console.azure.int-membrane.com"
+    static  = "https://${local.static_hostname}"
+    api     = "https://${local.api_hostname}"
+    ui      = "https://${local.ui_hostname}"
+    console = "https://${local.console_hostname}"
   }
 }
 

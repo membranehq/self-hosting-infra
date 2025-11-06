@@ -1,6 +1,6 @@
 # Container Apps Environment
 resource "azurerm_container_app_environment" "main" {
-  name                       = "${var.environment}-membrane-env"
+  name                       = "${var.environment}-${var.project}-environment-cae"
   location                   = azurerm_resource_group.main.location
   resource_group_name        = azurerm_resource_group.main.name
   log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
@@ -13,7 +13,7 @@ resource "azurerm_container_app_environment" "main" {
 
 # API Container App
 resource "azurerm_container_app" "api" {
-  name                         = "${var.environment}-api"
+  name                         = "${var.environment}-${var.project}-api-ca"
   container_app_environment_id = azurerm_container_app_environment.main.id
   resource_group_name          = azurerm_resource_group.main.name
   revision_mode                = "Single"
@@ -65,7 +65,7 @@ resource "azurerm_container_app" "api" {
       }
       env {
         name  = "BASE_URI"
-        value = "https://api.azure.int-membrane.com"
+        value = "https://${local.api_hostname}"
       }
       env {
         name  = "CUSTOM_CODE_RUNNER_URI"
@@ -97,7 +97,7 @@ resource "azurerm_container_app" "api" {
       }
       env {
         name  = "BASE_STATIC_URI"
-        value = "https://static.azure.int-membrane.com"
+        value = "https://${local.static_hostname}"
       }
       env {
         name  = "REDIS_URI"
@@ -157,7 +157,7 @@ resource "azurerm_container_app" "api" {
 
 # UI Container App
 resource "azurerm_container_app" "ui" {
-  name                         = "${var.environment}-ui"
+  name                         = "${var.environment}-${var.project}-ui-ca"
   container_app_environment_id = azurerm_container_app_environment.main.id
   resource_group_name          = azurerm_resource_group.main.name
   revision_mode                = "Single"
@@ -182,7 +182,7 @@ resource "azurerm_container_app" "ui" {
 
       env {
         name  = "NEXT_PUBLIC_ENGINE_URI"
-        value = "https://api.azure.int-membrane.com"
+        value = "https://${local.api_hostname}"
       }
       env {
         name  = "PORT"
@@ -210,7 +210,7 @@ resource "azurerm_container_app" "ui" {
 
 # Console Container App
 resource "azurerm_container_app" "console" {
-  name                         = "${var.environment}-console"
+  name                         = "${var.environment}-${var.project}-console-ca"
   container_app_environment_id = azurerm_container_app_environment.main.id
   resource_group_name          = azurerm_resource_group.main.name
   revision_mode                = "Single"
@@ -239,7 +239,7 @@ resource "azurerm_container_app" "console" {
       }
       env {
         name  = "NEXT_PUBLIC_BASE_URI"
-        value = "https://console.azure.int-membrane.com"
+        value = "https://${local.console_hostname}"
       }
       env {
         name  = "NEXT_PUBLIC_AUTH0_DOMAIN"
@@ -247,11 +247,11 @@ resource "azurerm_container_app" "console" {
       }
       env {
         name  = "NEXT_PUBLIC_ENGINE_API_URI"
-        value = "https://api.azure.int-membrane.com"
+        value = "https://${local.api_hostname}"
       }
       env {
         name  = "NEXT_PUBLIC_ENGINE_UI_URI"
-        value = "https://ui.azure.int-membrane.com"
+        value = "https://${local.ui_hostname}"
       }
       env {
         name  = "NEXT_PUBLIC_AUTH0_CLIENT_ID"
@@ -283,7 +283,7 @@ resource "azurerm_container_app" "console" {
 
 # Custom Code Runner Container App
 resource "azurerm_container_app" "custom_code_runner" {
-  name                         = "${var.environment}-custom-code-runner"
+  name                         = "${var.environment}-${var.project}-runner-ca"
   container_app_environment_id = azurerm_container_app_environment.main.id
   resource_group_name          = azurerm_resource_group.main.name
   revision_mode                = "Single"
@@ -332,7 +332,7 @@ resource "azurerm_container_app" "custom_code_runner" {
 
 # Log Analytics Workspace for Container Apps
 resource "azurerm_log_analytics_workspace" "main" {
-  name                = "${var.environment}-membrane-logs"
+  name                = "${var.environment}-${var.project}-logs-law"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   sku                 = "PerGB2018"

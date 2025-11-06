@@ -1,6 +1,6 @@
 # Azure Cache for Redis
 resource "azurerm_redis_cache" "main" {
-  name                = "${var.environment}-membrane-redis"
+  name                = "${var.environment}-${var.project}-cache-redis"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   capacity            = 0 # C0 Basic (250MB)

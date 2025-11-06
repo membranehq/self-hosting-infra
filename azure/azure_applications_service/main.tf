@@ -36,4 +36,14 @@ locals {
     Environment = var.environment
     Project     = var.project
   }
+
+  # Domain name prefix based on environment
+  # For prod: api.domain.com, for dev/stage: api.dev.domain.com
+  domain_prefix = var.environment == "prod" ? "" : "${var.environment}."
+
+  # Subdomain hostnames
+  api_hostname     = "api.${local.domain_prefix}${var.domain_name}"
+  ui_hostname      = "ui.${local.domain_prefix}${var.domain_name}"
+  console_hostname = "console.${local.domain_prefix}${var.domain_name}"
+  static_hostname  = "static.${local.domain_prefix}${var.domain_name}"
 }

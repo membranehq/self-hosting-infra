@@ -1,6 +1,6 @@
 # Virtual Network
 resource "azurerm_virtual_network" "main" {
-  name                = "${var.environment}-membrane-vnet"
+  name                = "${var.environment}-${var.project}-network-vnet"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   address_space       = ["10.0.0.0/16"]
@@ -10,7 +10,7 @@ resource "azurerm_virtual_network" "main" {
 
 # Subnet for containers
 resource "azurerm_subnet" "containers" {
-  name                 = "${var.environment}-containers-subnet"
+  name                 = "${var.environment}-${var.project}-containers-snet"
   resource_group_name  = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = ["10.0.4.0/24"]
@@ -26,7 +26,7 @@ resource "azurerm_subnet" "containers" {
 
 # Subnet for Azure Container Apps (alternative to ACI)
 resource "azurerm_subnet" "container_apps" {
-  name                 = "${var.environment}-container-apps-subnet"
+  name                 = "${var.environment}-${var.project}-containerapps-snet"
   resource_group_name  = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = ["10.0.0.0/23"]
@@ -39,7 +39,7 @@ resource "azurerm_subnet" "container_apps" {
 
 # Subnet for databases and cache
 resource "azurerm_subnet" "data" {
-  name                 = "${var.environment}-data-subnet"
+  name                 = "${var.environment}-${var.project}-data-snet"
   resource_group_name  = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = ["10.0.3.0/24"]
@@ -51,7 +51,7 @@ resource "azurerm_subnet" "data" {
 
 # Network Security Group for containers
 resource "azurerm_network_security_group" "containers" {
-  name                = "${var.environment}-containers-nsg"
+  name                = "${var.environment}-${var.project}-containers-nsg"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
 
@@ -90,7 +90,7 @@ resource "azurerm_subnet_network_security_group_association" "containers" {
 
 # NSG for data subnet
 resource "azurerm_network_security_group" "data" {
-  name                = "${var.environment}-data-nsg"
+  name                = "${var.environment}-${var.project}-data-nsg"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
 

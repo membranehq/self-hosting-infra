@@ -1,6 +1,6 @@
 # Azure Key Vault for secrets management
 resource "azurerm_key_vault" "main" {
-  name                        = "${var.environment}membranekv${var.keyvault_suffix}"
+  name                        = "${var.environment}${var.project}secretskv${var.keyvault_suffix}"
   location                    = azurerm_resource_group.main.location
   resource_group_name         = azurerm_resource_group.main.name
   enabled_for_disk_encryption = false

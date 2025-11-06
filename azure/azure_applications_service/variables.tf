@@ -93,3 +93,9 @@ variable "harbor_host" {
   type        = string
   default     = "harbor.integration.app"
 }
+
+variable "domain_name" {
+  description = "Base domain name for custom domains"
+  type        = string
+  default     = "azure.int-membrane.com"
+}
