@@ -99,3 +99,103 @@ variable "domain_name" {
   type        = string
   default     = "azure.int-membrane.com"
 }
+
+# Container App - API
+variable "api_cpu" {
+  description = "CPU allocation for API container"
+  type        = number
+  default     = 1
+}
+
+variable "api_memory" {
+  description = "Memory allocation for API container"
+  type        = string
+  default     = "2Gi"
+}
+
+variable "api_min_replicas" {
+  description = "Minimum number of replicas for API"
+  type        = number
+  default     = 1
+}
+
+variable "api_max_replicas" {
+  description = "Maximum number of replicas for API"
+  type        = number
+  default     = 1
+}
+
+# Container App - UI
+variable "ui_cpu" {
+  description = "CPU allocation for UI container"
+  type        = number
+  default     = 0.25
+}
+
+variable "ui_memory" {
+  description = "Memory allocation for UI container"
+  type        = string
+  default     = "0.5Gi"
+}
+
+variable "ui_min_replicas" {
+  description = "Minimum number of replicas for UI"
+  type        = number
+  default     = 1
+}
+
+variable "ui_max_replicas" {
+  description = "Maximum number of replicas for UI"
+  type        = number
+  default     = 10
+}
+
+# Container App - Console
+variable "console_cpu" {
+  description = "CPU allocation for Console container"
+  type        = number
+  default     = 0.25
+}
+
+variable "console_memory" {
+  description = "Memory allocation for Console container"
+  type        = string
+  default     = "0.5Gi"
+}
+
+variable "console_min_replicas" {
+  description = "Minimum number of replicas for Console"
+  type        = number
+  default     = 1
+}
+
+variable "console_max_replicas" {
+  description = "Maximum number of replicas for Console"
+  type        = number
+  default     = 10
+}
+
+# Container App - Custom Code Runner
+variable "runner_cpu" {
+  description = "CPU allocation for Custom Code Runner container"
+  type        = number
+  default     = 0.25
+}
+
+variable "runner_memory" {
+  description = "Memory allocation for Custom Code Runner container"
+  type        = string
+  default     = "0.5Gi"
+}
+
+variable "runner_min_replicas" {
+  description = "Minimum number of replicas for Custom Code Runner"
+  type        = number
+  default     = 1
+}
+
+variable "runner_max_replicas" {
+  description = "Maximum number of replicas for Custom Code Runner"
+  type        = number
+  default     = 10
+}

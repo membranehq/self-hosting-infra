@@ -52,8 +52,8 @@ resource "azurerm_container_app" "api" {
     container {
       name   = "api"
       image  = "${var.harbor_host}/core/api:${var.image_tag}"
-      cpu    = 1
-      memory = "2Gi"
+      cpu    = var.api_cpu
+      memory = var.api_memory
 
       env {
         name  = "NODE_ENV"
@@ -137,8 +137,8 @@ resource "azurerm_container_app" "api" {
       }
     }
 
-    min_replicas = 1
-    max_replicas = 1
+    min_replicas = var.api_min_replicas
+    max_replicas = var.api_max_replicas
   }
 
   ingress {
@@ -177,8 +177,8 @@ resource "azurerm_container_app" "ui" {
     container {
       name   = "ui"
       image  = "${var.harbor_host}/core/ui:${var.image_tag}"
-      cpu    = 0.25
-      memory = "0.5Gi"
+      cpu    = var.ui_cpu
+      memory = var.ui_memory
 
       env {
         name  = "NEXT_PUBLIC_ENGINE_URI"
@@ -190,8 +190,8 @@ resource "azurerm_container_app" "ui" {
       }
     }
 
-    min_replicas = 1
-    max_replicas = 10
+    min_replicas = var.ui_min_replicas
+    max_replicas = var.ui_max_replicas
   }
 
   ingress {
@@ -230,8 +230,8 @@ resource "azurerm_container_app" "console" {
     container {
       name   = "console"
       image  = "${var.harbor_host}/core/console:${var.image_tag}"
-      cpu    = 0.25
-      memory = "0.5Gi"
+      cpu    = var.console_cpu
+      memory = var.console_memory
 
       env {
         name  = "NODE_VERSION"
@@ -263,8 +263,8 @@ resource "azurerm_container_app" "console" {
       }
     }
 
-    min_replicas = 1
-    max_replicas = 10
+    min_replicas = var.console_min_replicas
+    max_replicas = var.console_max_replicas
   }
 
   ingress {
@@ -303,8 +303,8 @@ resource "azurerm_container_app" "custom_code_runner" {
     container {
       name   = "custom-code-runner"
       image  = "${var.harbor_host}/core/custom-code-runner:${var.image_tag}"
-      cpu    = 0.25
-      memory = "0.5Gi"
+      cpu    = var.runner_cpu
+      memory = var.runner_memory
 
       env {
         name  = "PORT"
@@ -312,8 +312,8 @@ resource "azurerm_container_app" "custom_code_runner" {
       }
     }
 
-    min_replicas = 1
-    max_replicas = 10
+    min_replicas = var.runner_min_replicas
+    max_replicas = var.runner_max_replicas
   }
 
   ingress {
