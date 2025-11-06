@@ -16,7 +16,7 @@
 # }
 
 resource "azurerm_managed_redis" "managed_redis" {
-  name                = "${var.environment}-${var.project}"
+  name                = "${var.environment}-${var.project}-azure-menaged-redis"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
   sku_name            = "Balanced_B0"

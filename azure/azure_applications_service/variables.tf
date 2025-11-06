@@ -70,12 +70,6 @@ variable "project" {
   default     = "membrane"
 }
 
-variable "resource_group_name" {
-  description = "Name of the resource group"
-  type        = string
-  default     = "membrane-rg"
-}
-
 variable "keyvault_suffix" {
   description = "Suffix to append to Key Vault name for uniqueness"
   type        = string

@@ -22,7 +22,7 @@ provider "azurerm" {
 
 # Create Resource Group
 resource "azurerm_resource_group" "main" {
-  name     = var.resource_group_name
+  name     = "${var.environment}-${var.project}-rg"
   location = var.location
   tags     = local.common_tags
 }
