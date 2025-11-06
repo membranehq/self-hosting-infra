@@ -7,7 +7,7 @@ variable "environment" {
 variable "location" {
   description = "Azure region"
   type        = string
-  default     = "eastus"
+  default     = "germanywestcentral"
 }
 
 variable "subscription_id" {
@@ -74,4 +74,10 @@ variable "resource_group_name" {
   description = "Name of the resource group"
   type        = string
   default     = "integration-app-rg"
+}
+
+variable "keyvault_suffix" {
+  description = "Suffix to append to Key Vault name for uniqueness"
+  type        = string
+  default     = ""
 }

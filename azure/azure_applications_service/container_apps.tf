@@ -43,6 +43,11 @@ resource "azurerm_container_app" "api" {
     value = random_password.encryption_secret.result
   }
 
+  secret {
+    name  = "mongo-uri"
+    value = var.mongo_uri
+  }
+
   template {
     container {
       name   = "api"
