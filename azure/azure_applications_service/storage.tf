@@ -1,6 +1,6 @@
 # Single Storage Account for all storage needs
 resource "azurerm_storage_account" "main" {
-  name                             = "${var.environment}integrationapp"
+  name                             = "${var.environment}membrane"
   resource_group_name              = azurerm_resource_group.main.name
   location                         = azurerm_resource_group.main.location
   account_tier                     = "Standard"
@@ -24,21 +24,21 @@ resource "azurerm_storage_account" "main" {
 
 # Container for temporary files
 resource "azurerm_storage_container" "tmp" {
-  name                  = "integration-app-dev-temp"
+  name                  = "membrane-${var.environment}-temp"
   storage_account_id    = azurerm_storage_account.main.id
   container_access_type = "private"
 }
 
 # Container for connectors
 resource "azurerm_storage_container" "connectors" {
-  name                  = "integration-app-connectors"
+  name                  = "membrane-connectors"
   storage_account_id    = azurerm_storage_account.main.id
   container_access_type = "private"
 }
 
 # Container for copilot
 resource "azurerm_storage_container" "copilot" {
-  name                  = "integration-app-copilot"
+  name                  = "membrane-copilot"
   storage_account_id    = azurerm_storage_account.main.id
   container_access_type = "private"
 }
@@ -59,14 +59,14 @@ resource "azurerm_storage_account_static_website" "main" {
 # Manual assignment required via Azure Portal or Azure CLI with elevated permissions:
 #
 # az role assignment create \
-#   --assignee ce4b1a49-f429-4ff2-ac39-2f50fe680789 \
+#   --assignee <principal-id> \
 #   --role "Storage Blob Data Contributor" \
-#   --scope "/subscriptions/8efa5445-aa5c-402c-9975-80616017c233/resourceGroups/integration-app-rg/providers/Microsoft.Storage/storageAccounts/devintegrationapp"
+#   --scope "/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.Storage/storageAccounts/<storage-account>"
 #
 # az role assignment create \
-#   --assignee ce4b1a49-f429-4ff2-ac39-2f50fe680789 \
+#   --assignee <principal-id> \
 #   --role "Storage Account Contributor" \
-#   --scope "/subscriptions/8efa5445-aa5c-402c-9975-80616017c233/resourceGroups/integration-app-rg/providers/Microsoft.Storage/storageAccounts/devintegrationapp"
+#   --scope "/subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.Storage/storageAccounts/<storage-account>"
 
 # Role assignments commented out due to insufficient permissions
 # Uncomment these after granting User Access Administrator or Owner role to your service principal

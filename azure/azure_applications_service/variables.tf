@@ -67,13 +67,13 @@ variable "harbor_password" {
 variable "project" {
   description = "Project name"
   type        = string
-  default     = "integration-app"
+  default     = "membrane"
 }
 
 variable "resource_group_name" {
   description = "Name of the resource group"
   type        = string
-  default     = "integration-app-rg"
+  default     = "membrane-rg"
 }
 
 variable "keyvault_suffix" {

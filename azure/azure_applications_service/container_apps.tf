@@ -1,6 +1,6 @@
 # Container Apps Environment
 resource "azurerm_container_app_environment" "main" {
-  name                       = "${var.environment}-integration-app-env"
+  name                       = "${var.environment}-membrane-env"
   location                   = azurerm_resource_group.main.location
   resource_group_name        = azurerm_resource_group.main.name
   log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
@@ -332,7 +332,7 @@ resource "azurerm_container_app" "custom_code_runner" {
 
 # Log Analytics Workspace for Container Apps
 resource "azurerm_log_analytics_workspace" "main" {
-  name                = "${var.environment}-integration-app-logs"
+  name                = "${var.environment}-membrane-logs"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   sku                 = "PerGB2018"
