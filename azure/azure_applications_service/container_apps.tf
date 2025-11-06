@@ -52,8 +52,8 @@ resource "azurerm_container_app" "api" {
     container {
       name   = "api"
       image  = "harbor.integration.app/core/api:latest"
-      cpu    = 0.25
-      memory = "0.5Gi"
+      cpu    = 1
+      memory = "2Gi"
 
       env {
         name  = "NODE_ENV"
