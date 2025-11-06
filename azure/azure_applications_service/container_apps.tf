@@ -23,7 +23,7 @@ resource "azurerm_container_app" "api" {
   }
 
   registry {
-    server               = "harbor.integration.app"
+    server               = var.harbor_host
     username             = var.harbor_username
     password_secret_name = "harbor-password"
   }
@@ -51,7 +51,7 @@ resource "azurerm_container_app" "api" {
   template {
     container {
       name   = "api"
-      image  = "harbor.integration.app/core/api:latest"
+      image  = "${var.harbor_host}/core/api:${var.image_tag}"
       cpu    = 1
       memory = "2Gi"
 
@@ -163,7 +163,7 @@ resource "azurerm_container_app" "ui" {
   revision_mode                = "Single"
 
   registry {
-    server               = "harbor.integration.app"
+    server               = var.harbor_host
     username             = var.harbor_username
     password_secret_name = "harbor-password"
   }
@@ -176,7 +176,7 @@ resource "azurerm_container_app" "ui" {
   template {
     container {
       name   = "ui"
-      image  = "harbor.integration.app/core/ui:latest"
+      image  = "${var.harbor_host}/core/ui:${var.image_tag}"
       cpu    = 0.25
       memory = "0.5Gi"
 
@@ -216,7 +216,7 @@ resource "azurerm_container_app" "console" {
   revision_mode                = "Single"
 
   registry {
-    server               = "harbor.integration.app"
+    server               = var.harbor_host
     username             = var.harbor_username
     password_secret_name = "harbor-password"
   }
@@ -229,7 +229,7 @@ resource "azurerm_container_app" "console" {
   template {
     container {
       name   = "console"
-      image  = "harbor.integration.app/core/console:latest"
+      image  = "${var.harbor_host}/core/console:${var.image_tag}"
       cpu    = 0.25
       memory = "0.5Gi"
 
@@ -289,7 +289,7 @@ resource "azurerm_container_app" "custom_code_runner" {
   revision_mode                = "Single"
 
   registry {
-    server               = "harbor.integration.app"
+    server               = var.harbor_host
     username             = var.harbor_username
     password_secret_name = "harbor-password"
   }
@@ -302,7 +302,7 @@ resource "azurerm_container_app" "custom_code_runner" {
   template {
     container {
       name   = "custom-code-runner"
-      image  = "harbor.integration.app/core/custom-code-runner:latest"
+      image  = "${var.harbor_host}/core/custom-code-runner:${var.image_tag}"
       cpu    = 0.25
       memory = "0.5Gi"
 

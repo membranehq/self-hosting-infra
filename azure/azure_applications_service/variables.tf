@@ -81,3 +81,15 @@ variable "keyvault_suffix" {
   type        = string
   default     = ""
 }
+
+variable "image_tag" {
+  description = "Docker image tag for all container apps"
+  type        = string
+  default     = "latest"
+}
+
+variable "harbor_host" {
+  description = "Harbor registry host"
+  type        = string
+  default     = "harbor.integration.app"
+}
