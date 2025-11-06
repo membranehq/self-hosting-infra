@@ -22,10 +22,11 @@ resource "azurerm_managed_redis" "managed_redis" {
   sku_name            = "Balanced_B0"
 
   default_database {
-    access_keys_authentication_enabled = false
+    access_keys_authentication_enabled = true
     client_protocol                    = "Encrypted"
     clustering_policy                  = "EnterpriseCluster"
     eviction_policy                    = "NoEviction"
+
   }
 
   tags = local.common_tags
