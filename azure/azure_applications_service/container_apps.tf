@@ -101,7 +101,8 @@ resource "azurerm_container_app" "api" {
       }
       env {
         name  = "REDIS_URI"
-        value = "rediss://:${azurerm_redis_cache.main.primary_access_key}@${azurerm_redis_cache.main.hostname}:6380"
+        # value = "rediss://:${azurerm_redis_cache.main.primary_access_key}@${azurerm_redis_cache.main.hostname}:6380"
+        value = "rediss://${azurerm_managed_redis.managed_redis.hostname}:10000"
       }
       env {
         name  = "PORT"

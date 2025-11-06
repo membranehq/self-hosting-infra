@@ -55,9 +55,19 @@ output "dns_zone_name_servers" {
   value       = azurerm_dns_zone.main.name_servers
 }
 
+# output "redis_hostname" {
+#   description = "Redis cache hostname"
+#   value       = azurerm_redis_cache.main.hostname
+# }
+
 output "redis_hostname" {
-  description = "Redis cache hostname"
-  value       = azurerm_redis_cache.main.hostname
+  description = "Managed Redis hostname"
+  value       = azurerm_managed_redis.managed_redis.hostname
+}
+
+output "redis_private_endpoint_ip" {
+  description = "Redis Private Endpoint IP Address"
+  value       = azurerm_private_endpoint.membrane_redis_pe.private_service_connection[0].private_ip_address
 }
 
 output "key_vault_uri" {

@@ -125,7 +125,7 @@ resource "azurerm_private_endpoint" "membrane_redis_pe" {
     name                           = "dev-membrane-redis-pe_844d736b-ae89-4a30-a5a3-0cba52b4301f"
     private_connection_resource_id = "/subscriptions/8efa5445-aa5c-402c-9975-80616017c233/resourceGroups/membrane-rg/providers/Microsoft.Cache/RedisEnterprise/dev-membrane"
     is_manual_connection           = false
-    subresource_names = ["redisEnterprise"]
+    subresource_names              = ["redisEnterprise"]
   }
 
   private_dns_zone_group {
