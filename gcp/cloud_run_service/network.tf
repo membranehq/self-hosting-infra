@@ -66,6 +66,8 @@ resource "google_compute_firewall" "allow_health_checks" {
 }
 
 # Firewall rule to allow Cloud Run services to access Redis
+# Cloud Run services use VPC connector to access VPC-peered services
+# This rule allows traffic from the VPC connector range to Redis
 resource "google_compute_firewall" "allow_redis_access" {
   name    = "${local.service_name_prefix}-allow-redis"
   network = google_compute_network.main.name
@@ -75,9 +77,18 @@ resource "google_compute_firewall" "allow_redis_access" {
     ports    = ["6379"]
   }
 
-  source_ranges = [google_compute_subnetwork.main.ip_cidr_range]
+  # Allow from VPC connector range (Cloud Run services use connector)
+  source_ranges = [
+    google_vpc_access_connector.main.ip_cidr_range
+  ]
   target_tags   = []
-  description    = "Allow Cloud Run services to access Redis via VPC peering"
+  description    = "Allow Cloud Run services (via VPC connector) to access Redis via VPC peering"
+  
+  # Ensure this rule is created after VPC peering and connector are established
+  depends_on = [
+    google_service_networking_connection.private_vpc_connection,
+    google_vpc_access_connector.main
+  ]
 }
 
 # Static IP addresses for Cloud NAT (for MongoDB Atlas whitelisting)
