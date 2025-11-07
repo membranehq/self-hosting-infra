@@ -1,0 +1,71 @@
+# GCP Project Configuration
+project_id  = "your-gcp-project-id"
+region      = "europe-west3" # Frankfurt
+environment = "dev"
+project     = "membrane"
+
+# Domain Configuration
+domain_name = "gcp.int-membrane.com"
+
+# Auth0 Configuration
+auth0_domain        = "your-tenant.auth0.com"
+auth0_client_id     = "your-auth0-client-id"
+auth0_client_secret = "your-auth0-client-secret"
+
+# MongoDB Configuration
+mongo_uri = "mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority"
+
+# Harbor Registry Configuration
+harbor_host     = "harbor.integration.app"
+harbor_username = "robot$customer-name"
+harbor_password = "your-harbor-password"
+
+# Container Image Tag
+image_tag = "latest" # or specific version like "v1.0.0"
+
+# Cloud Run Service Configuration - API
+api_cpu          = "1"
+api_memory       = "2Gi"
+api_min_instances = 1
+api_max_instances = 10
+
+# Cloud Run Service Configuration - UI
+ui_cpu          = "1"
+ui_memory       = "512Mi"
+ui_min_instances = 1
+ui_max_instances = 10
+
+# Cloud Run Service Configuration - Console
+console_cpu          = "1"
+console_memory       = "512Mi"
+console_min_instances = 1
+console_max_instances = 10
+
+# Cloud Run Service Configuration - Custom Code Runner
+runner_cpu          = "1"
+runner_memory       = "512Mi"
+runner_min_instances = 1
+runner_max_instances = 10
+
+# Cloud Run Service Configuration - Instant Tasks Worker
+instant_tasks_worker_cpu          = "1"
+instant_tasks_worker_memory       = "1Gi"
+instant_tasks_worker_min_instances = 2
+instant_tasks_worker_max_instances = 10
+
+# Cloud Run Service Configuration - Queued Tasks Worker
+queued_tasks_worker_cpu          = "1"
+queued_tasks_worker_memory       = "1Gi"
+queued_tasks_worker_min_instances = 2
+queued_tasks_worker_max_instances = 10
+
+# Cloud Run Service Configuration - Orchestrator
+orchestrator_cpu          = "1"
+orchestrator_memory       = "1Gi"
+orchestrator_min_instances = 2
+orchestrator_max_instances = 2
+
+# Redis Configuration
+redis_tier          = "BASIC"        # Options: BASIC, STANDARD_HA
+redis_memory_size_gb = 1             # Size in GB
+redis_version       = "REDIS_7_0"    # Redis version
