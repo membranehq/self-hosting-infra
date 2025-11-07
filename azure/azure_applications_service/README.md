@@ -17,7 +17,6 @@ This Terraform module deploys the Integration.app application stack on Azure, pr
 3. **Azure Storage Account** - Object storage with containers:
    - `integration-app-dev-temp` - Temporary files (7-day lifecycle)
    - `integration-app-connectors` - Connector files
-   - `integration-app-copilot` - Copilot files
    - `$web` - Static website hosting
 
 4. **Azure Front Door** - CDN and load balancing for:

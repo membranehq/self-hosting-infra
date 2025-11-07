@@ -36,13 +36,6 @@ resource "azurerm_storage_container" "connectors" {
   container_access_type = "private"
 }
 
-# Container for copilot
-resource "azurerm_storage_container" "copilot" {
-  name                  = "${var.environment}-${var.project}-copilot-container"
-  storage_account_id    = azurerm_storage_account.main.id
-  container_access_type = "private"
-}
-
 # Note: For static website hosting, Azure automatically creates a $web container
 # We'll use that container for static files instead of creating a separate one
 
