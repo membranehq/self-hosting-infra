@@ -2,7 +2,8 @@ resource "aws_s3_bucket" "tmp" {
   bucket = "${var.environment}-${var.project}-tmp"
 
   tags = {
-    Service = "api"
+    Service   = "api"
+    Component = "storage-s3"
   }
 }
 
@@ -10,7 +11,8 @@ resource "aws_s3_bucket" "connectors" {
   bucket = "${var.environment}-${var.project}-connectors"
 
   tags = {
-    Service = "api"
+    Service   = "api"
+    Component = "storage-s3"
   }
 }
 
@@ -18,7 +20,8 @@ resource "aws_s3_bucket" "static" {
   bucket = "${var.environment}-${var.project}-static"
 
   tags = {
-    Service = "api"
+    Service   = "api"
+    Component = "storage-s3"
   }
 }
 

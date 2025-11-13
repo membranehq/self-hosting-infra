@@ -12,10 +12,16 @@ provider "aws" {
   region = var.aws_region
 
   default_tags {
-    tags = {
-      Environment = var.environment
-      Project     = var.project
-    }
+    tags = merge(
+      {
+        Environment = var.environment
+        Project     = var.project
+        Application = "${var.project}-${var.environment}-eks"
+        ManagedBy   = "terraform"
+        Terraform   = "true"
+      },
+      var.cost_center != "" ? { CostCenter = var.cost_center } : {}
+    )
   }
 }
 
@@ -24,9 +30,15 @@ provider "aws" {
   region = "us-east-1"
 
   default_tags {
-    tags = {
-      Environment = var.environment
-      Project     = var.project
-    }
+    tags = merge(
+      {
+        Environment = var.environment
+        Project     = var.project
+        Application = var.project
+        ManagedBy   = "terraform"
+        Terraform   = "true"
+      },
+      var.cost_center != "" ? { CostCenter = var.cost_center } : {}
+    )
   }
 }

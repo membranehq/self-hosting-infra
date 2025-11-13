@@ -47,6 +47,7 @@ resource "aws_cloudfront_distribution" "static" {
   }
 
   tags = {
-    Service = "core"
+    Service   = "core"
+    Component = "cdn"
   }
 }

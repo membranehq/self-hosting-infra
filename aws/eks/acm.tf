@@ -3,6 +3,11 @@ resource "aws_acm_certificate" "cloudfront" {
   domain_name       = "static.${var.environment}.${var.hosted_zone_name}"
   validation_method = "DNS"
 
+  tags = {
+    Service   = "cloudfront"
+    Component = "security-certificates"
+  }
+
   lifecycle {
     create_before_destroy = true
   }
@@ -31,7 +36,8 @@ resource "aws_acm_certificate" "alb" {
   }
 
   tags = {
-    Service = "alb"
+    Service   = "alb"
+    Component = "security-certificates"
   }
 }
 

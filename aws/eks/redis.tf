@@ -3,11 +3,12 @@
 ############################################
 resource "aws_elasticache_subnet_group" "redis" {
   name       = "${var.environment}-redis-subnet-group"
-  subnet_ids = var.private_subnet_ids
+  subnet_ids = aws_subnet.private[*].id
 
   tags = {
     Service     = "redis"
     Environment = var.environment
+    Component   = "database-redis"
   }
 }
 
@@ -16,7 +17,7 @@ resource "aws_elasticache_subnet_group" "redis" {
 ############################################
 resource "aws_elasticache_replication_group" "redis" {
   replication_group_id = "${var.environment}-redis-new"
-  description          = "Redis (cluster mode enabled) for Integration.app"
+  description          = "Redis (cluster mode enabled) for ${var.project}"
 
   engine         = "redis"
   engine_version = var.redis_engine_version # e.g. "7.1.0"
@@ -45,6 +46,7 @@ resource "aws_elasticache_replication_group" "redis" {
   tags = {
     Service     = "redis"
     Environment = var.environment
+    Component   = "database-redis"
   }
 }
 

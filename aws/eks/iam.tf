@@ -1,16 +1,10 @@
 # Data source to get current AWS account ID
 data "aws_caller_identity" "current" {}
 
-# OIDC Provider for EKS
-# The OIDC provider should already exist since it was created by Ryvn
-data "aws_iam_openid_connect_provider" "cluster" {
-  url = var.cluster_oidc_issuer_url
-}
-
 # Create access entries for each user
 resource "aws_eks_access_entry" "user_access" {
   for_each      = toset(var.eks_admin_users)
-  cluster_name  = var.eks_cluster_name
+  cluster_name  = aws_eks_cluster.main.name
   principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${each.value}"
   type          = "STANDARD"
 }
@@ -18,7 +12,7 @@ resource "aws_eks_access_entry" "user_access" {
 # Associate admin policy with each user
 resource "aws_eks_access_policy_association" "user_admin" {
   for_each      = toset(var.eks_admin_users)
-  cluster_name  = var.eks_cluster_name
+  cluster_name  = aws_eks_cluster.main.name
   principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/${each.value}"
   policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
 
@@ -39,21 +33,22 @@ resource "aws_iam_role" "integration_app_sa" {
       Action = "sts:AssumeRoleWithWebIdentity"
       Effect = "Allow"
       Principal = {
-        Federated = data.aws_iam_openid_connect_provider.cluster.arn
+        Federated = aws_iam_openid_connect_provider.cluster.arn
       }
       Condition = {
         StringEquals = {
-          "${replace(var.cluster_oidc_issuer_url, "https://", "")}:aud" = "sts.amazonaws.com"
+          "${replace(aws_eks_cluster.main.identity[0].oidc[0].issuer, "https://", "")}:aud" = "sts.amazonaws.com"
         }
         StringLike = {
-          "${replace(var.cluster_oidc_issuer_url, "https://", "")}:sub" = "system:serviceaccount:*:integration-app"
+          "${replace(aws_eks_cluster.main.identity[0].oidc[0].issuer, "https://", "")}:sub" = "system:serviceaccount:*:integration-app"
         }
       }
     }]
   })
 
   tags = {
-    Service = "integration-app"
+    Service   = "integration-app"
+    Component = "security-iam"
   }
 }
 
@@ -96,21 +91,22 @@ resource "aws_iam_role" "load_balancer_controller" {
       Action = "sts:AssumeRoleWithWebIdentity"
       Effect = "Allow"
       Principal = {
-        Federated = data.aws_iam_openid_connect_provider.cluster.arn
+        Federated = aws_iam_openid_connect_provider.cluster.arn
       }
       Condition = {
         StringEquals = {
-          "${replace(var.cluster_oidc_issuer_url, "https://", "")}:aud" = "sts.amazonaws.com"
+          "${replace(aws_eks_cluster.main.identity[0].oidc[0].issuer, "https://", "")}:aud" = "sts.amazonaws.com"
         }
         StringLike = {
-          "${replace(var.cluster_oidc_issuer_url, "https://", "")}:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
+          "${replace(aws_eks_cluster.main.identity[0].oidc[0].issuer, "https://", "")}:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
         }
       }
     }]
   })
 
   tags = {
-    Service = "load-balancer-controller"
+    Service   = "load-balancer-controller"
+    Component = "security-iam"
   }
 }
 
@@ -361,21 +357,22 @@ resource "aws_iam_role" "external_dns" {
       Action = "sts:AssumeRoleWithWebIdentity"
       Effect = "Allow"
       Principal = {
-        Federated = data.aws_iam_openid_connect_provider.cluster.arn
+        Federated = aws_iam_openid_connect_provider.cluster.arn
       }
       Condition = {
         StringEquals = {
-          "${replace(var.cluster_oidc_issuer_url, "https://", "")}:aud" = "sts.amazonaws.com"
+          "${replace(aws_eks_cluster.main.identity[0].oidc[0].issuer, "https://", "")}:aud" = "sts.amazonaws.com"
         }
         StringLike = {
-          "${replace(var.cluster_oidc_issuer_url, "https://", "")}:sub" = "system:serviceaccount:*:external-dns"
+          "${replace(aws_eks_cluster.main.identity[0].oidc[0].issuer, "https://", "")}:sub" = "system:serviceaccount:*:external-dns"
         }
       }
     }]
   })
 
   tags = {
-    Service = "external-dns"
+    Service   = "external-dns"
+    Component = "security-iam"
   }
 }
 
