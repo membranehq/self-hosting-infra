@@ -105,12 +105,6 @@ output "vpc_subnet" {
   value       = google_compute_subnetwork.main.name
 }
 
-# Cloud NAT IP Addresses (for MongoDB Atlas whitelisting)
-output "cloud_nat_ips" {
-  description = "Static IP addresses used by Cloud NAT for outbound traffic - add these to MongoDB Atlas IP whitelist"
-  value       = google_compute_address.nat_ip[*].address
-}
-
 # Secret Manager
 output "secret_ids" {
   description = "Secret Manager secret IDs"

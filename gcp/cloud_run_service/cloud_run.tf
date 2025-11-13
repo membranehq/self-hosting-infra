@@ -14,8 +14,11 @@ resource "google_cloud_run_v2_service" "api" {
     }
 
     vpc_access {
-      connector = google_vpc_access_connector.main.id
-      egress    = "ALL_TRAFFIC"
+      network_interfaces {
+        network    = google_compute_network.main.id
+        subnetwork = google_compute_subnetwork.main.id
+      }
+      egress = "PRIVATE_RANGES_ONLY"
     }
 
     containers {
@@ -142,14 +145,6 @@ resource "google_cloud_run_v2_service" "api" {
   }
 
   labels = local.common_labels
-
-  # Ensure dependencies are created before API service references them
-  depends_on = [
-    google_cloud_run_v2_service.custom_code_runner,
-    google_cloud_run_v2_service_iam_member.runner_api_invoker,
-    google_redis_instance.main,
-    google_service_networking_connection.private_vpc_connection
-  ]
 }
 
 # IAM binding to allow public access to API
@@ -308,8 +303,11 @@ resource "google_cloud_run_v2_service" "custom_code_runner" {
     }
 
     vpc_access {
-      connector = google_vpc_access_connector.main.id
-      egress    = "ALL_TRAFFIC"
+      network_interfaces {
+        network    = google_compute_network.main.id
+        subnetwork = google_compute_subnetwork.main.id
+      }
+      egress = "PRIVATE_RANGES_ONLY"
     }
 
     containers {
@@ -335,21 +333,10 @@ resource "google_cloud_run_v2_service" "custom_code_runner" {
           port = 5000
         }
       }
-
-      env {
-        name  = "HOST"
-        value = "0.0.0.0"
-      }
     }
   }
 
   labels = local.common_labels
-
-  # Ensure Redis and VPC peering are ready
-  depends_on = [
-    google_redis_instance.main,
-    google_service_networking_connection.private_vpc_connection
-  ]
 }
 
 # Grant API service permission to invoke custom code runner
@@ -358,16 +345,6 @@ resource "google_cloud_run_v2_service_iam_member" "runner_api_invoker" {
   location = google_cloud_run_v2_service.custom_code_runner.location
   role     = "roles/run.invoker"
   member   = "serviceAccount:${google_service_account.api.email}"
-}
-
-# Allow unauthenticated invocations from same project (for health checks)
-# Note: This is a workaround - ideally the application should use identity tokens
-# Since ingress is INGRESS_TRAFFIC_INTERNAL_ONLY, this only allows internal project traffic
-resource "google_cloud_run_v2_service_iam_member" "runner_unauthenticated" {
-  name     = google_cloud_run_v2_service.custom_code_runner.name
-  location = google_cloud_run_v2_service.custom_code_runner.location
-  role     = "roles/run.invoker"
-  member   = "allUsers"
 }
 
 # Grant worker services permission to invoke custom code runner
@@ -401,8 +378,11 @@ resource "google_cloud_run_v2_service" "instant_tasks_worker" {
     }
 
     vpc_access {
-      connector = google_vpc_access_connector.main.id
-      egress    = "ALL_TRAFFIC"
+      network_interfaces {
+        network    = google_compute_network.main.id
+        subnetwork = google_compute_subnetwork.main.id
+      }
+      egress = "PRIVATE_RANGES_ONLY"
     }
 
     containers {
@@ -533,12 +513,6 @@ resource "google_cloud_run_v2_service" "instant_tasks_worker" {
   }
 
   labels = local.common_labels
-
-  # Ensure Redis and VPC peering are ready
-  depends_on = [
-    google_redis_instance.main,
-    google_service_networking_connection.private_vpc_connection
-  ]
 }
 
 # Queued Tasks Worker Service
@@ -557,8 +531,11 @@ resource "google_cloud_run_v2_service" "queued_tasks_worker" {
     }
 
     vpc_access {
-      connector = google_vpc_access_connector.main.id
-      egress    = "ALL_TRAFFIC"
+      network_interfaces {
+        network    = google_compute_network.main.id
+        subnetwork = google_compute_subnetwork.main.id
+      }
+      egress = "PRIVATE_RANGES_ONLY"
     }
 
     containers {
@@ -697,12 +674,6 @@ resource "google_cloud_run_v2_service" "queued_tasks_worker" {
   }
 
   labels = local.common_labels
-
-  # Ensure Redis and VPC peering are ready
-  depends_on = [
-    google_redis_instance.main,
-    google_service_networking_connection.private_vpc_connection
-  ]
 }
 
 # Orchestrator Service
@@ -721,8 +692,11 @@ resource "google_cloud_run_v2_service" "orchestrator" {
     }
 
     vpc_access {
-      connector = google_vpc_access_connector.main.id
-      egress    = "ALL_TRAFFIC"
+      network_interfaces {
+        network    = google_compute_network.main.id
+        subnetwork = google_compute_subnetwork.main.id
+      }
+      egress = "PRIVATE_RANGES_ONLY"
     }
 
     containers {
@@ -853,10 +827,4 @@ resource "google_cloud_run_v2_service" "orchestrator" {
   }
 
   labels = local.common_labels
-
-  # Ensure Redis and VPC peering are ready
-  depends_on = [
-    google_redis_instance.main,
-    google_service_networking_connection.private_vpc_connection
-  ]
 }
