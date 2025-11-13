@@ -62,6 +62,12 @@ resource "aws_eks_cluster" "main" {
     security_group_ids      = [aws_security_group.cluster.id]
   }
 
+  # Enable API-based access entries (required for aws_eks_access_entry)
+  access_config {
+    authentication_mode                         = "API_AND_CONFIG_MAP"
+    bootstrap_cluster_creator_admin_permissions = true
+  }
+
   enabled_cluster_log_types = var.cluster_enabled_log_types
 
   depends_on = [
@@ -202,10 +208,6 @@ resource "aws_eks_node_group" "main" {
 
   labels = {
     role = "general"
-  }
-
-  remote_access {
-    source_security_group_ids = [aws_security_group.node_group.id]
   }
 
   depends_on = [

@@ -1,5 +1,5 @@
 resource "aws_cloudfront_origin_access_control" "static" {
-  name                              = "${var.environment}-static-oac"
+  name                              = "${var.environment}-${var.project}-eks-static-oac"
   description                       = "OAC for static S3 bucket"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
@@ -10,7 +10,7 @@ resource "aws_cloudfront_distribution" "static" {
   enabled             = true
   default_root_object = "index.html"
 
-  aliases = ["static.${var.environment}.${var.hosted_zone_name}"]
+  aliases = ["static.${var.environment}.eks.${var.hosted_zone_name}"]
 
   depends_on = [aws_acm_certificate_validation.cloudfront]
 

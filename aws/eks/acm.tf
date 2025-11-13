@@ -1,6 +1,6 @@
 resource "aws_acm_certificate" "cloudfront" {
   provider          = aws.us-east-1
-  domain_name       = "static.${var.environment}.${var.hosted_zone_name}"
+  domain_name       = "static.${var.environment}.eks.${var.hosted_zone_name}"
   validation_method = "DNS"
 
   tags = {

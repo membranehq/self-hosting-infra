@@ -1,6 +1,6 @@
 resource "aws_route53_record" "static" {
   zone_id = var.route53_zone_id
-  name    = "static.${var.environment}.${var.hosted_zone_name}"
+  name    = "static.${var.environment}.eks.${var.hosted_zone_name}"
   type    = "A"
 
   alias {
