@@ -18,6 +18,13 @@ variable "cost_center" {
 variable "aws_region" {
   description = "AWS region"
   type        = string
+  default     = "eu-central-1"
+}
+
+variable "aws_profile" {
+  description = "AWS profile"
+  type        = string
+  default     = "development"
 }
 
 variable "availability_zones" {
@@ -115,23 +122,23 @@ variable "cluster_enabled_log_types" {
 variable "vpc_cni_addon_version" {
   description = "VPC CNI addon version"
   type        = string
-  default     = null  # Uses latest compatible version
+  default     = null # Uses latest compatible version
 }
 
 variable "kube_proxy_addon_version" {
   description = "Kube-proxy addon version"
   type        = string
-  default     = null  # Uses latest compatible version
+  default     = null # Uses latest compatible version
 }
 
 variable "coredns_addon_version" {
   description = "CoreDNS addon version"
   type        = string
-  default     = null  # Uses latest compatible version
+  default     = null # Uses latest compatible version
 }
 
 variable "ebs_csi_addon_version" {
   description = "EBS CSI driver addon version"
   type        = string
-  default     = null  # Uses latest compatible version
+  default     = null # Uses latest compatible version
 }

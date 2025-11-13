@@ -9,7 +9,8 @@ terraform {
 }
 
 provider "aws" {
-  region = var.aws_region
+  region  = var.aws_region
+  profile = var.aws_profile
 
   default_tags {
     tags = merge(
@@ -26,8 +27,9 @@ provider "aws" {
 }
 
 provider "aws" {
-  alias  = "us-east-1"
-  region = "us-east-1"
+  alias   = "us-east-1"
+  region  = "us-east-1"
+  profile = var.aws_profile
 
   default_tags {
     tags = merge(

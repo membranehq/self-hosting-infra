@@ -141,7 +141,7 @@ resource "aws_security_group" "node_group" {
   }
 
   tags = {
-    Name                                           = "${var.eks_cluster_name}-node-group-sg"
+    Name                                            = "${var.eks_cluster_name}-node-group-sg"
     Component                                       = "eks-node-group-security"
     "kubernetes.io/cluster/${var.eks_cluster_name}" = "owned"
   }

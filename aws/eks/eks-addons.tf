@@ -1,8 +1,8 @@
 # VPC CNI Addon
 resource "aws_eks_addon" "vpc_cni" {
-  cluster_name             = aws_eks_cluster.main.name
-  addon_name               = "vpc-cni"
-  addon_version            = var.vpc_cni_addon_version
+  cluster_name                = aws_eks_cluster.main.name
+  addon_name                  = "vpc-cni"
+  addon_version               = var.vpc_cni_addon_version
   resolve_conflicts_on_create = "OVERWRITE"
   resolve_conflicts_on_update = "PRESERVE"
 
@@ -14,9 +14,9 @@ resource "aws_eks_addon" "vpc_cni" {
 
 # Kube-proxy Addon
 resource "aws_eks_addon" "kube_proxy" {
-  cluster_name             = aws_eks_cluster.main.name
-  addon_name               = "kube-proxy"
-  addon_version            = var.kube_proxy_addon_version
+  cluster_name                = aws_eks_cluster.main.name
+  addon_name                  = "kube-proxy"
+  addon_version               = var.kube_proxy_addon_version
   resolve_conflicts_on_create = "OVERWRITE"
   resolve_conflicts_on_update = "PRESERVE"
 
@@ -28,9 +28,9 @@ resource "aws_eks_addon" "kube_proxy" {
 
 # CoreDNS Addon
 resource "aws_eks_addon" "coredns" {
-  cluster_name             = aws_eks_cluster.main.name
-  addon_name               = "coredns"
-  addon_version            = var.coredns_addon_version
+  cluster_name                = aws_eks_cluster.main.name
+  addon_name                  = "coredns"
+  addon_version               = var.coredns_addon_version
   resolve_conflicts_on_create = "OVERWRITE"
   resolve_conflicts_on_update = "PRESERVE"
 
@@ -78,10 +78,10 @@ resource "aws_iam_role_policy_attachment" "ebs_csi" {
 
 # EBS CSI Driver Addon
 resource "aws_eks_addon" "ebs_csi" {
-  cluster_name             = aws_eks_cluster.main.name
-  addon_name               = "aws-ebs-csi-driver"
-  addon_version            = var.ebs_csi_addon_version
-  service_account_role_arn = aws_iam_role.ebs_csi.arn
+  cluster_name                = aws_eks_cluster.main.name
+  addon_name                  = "aws-ebs-csi-driver"
+  addon_version               = var.ebs_csi_addon_version
+  service_account_role_arn    = aws_iam_role.ebs_csi.arn
   resolve_conflicts_on_create = "OVERWRITE"
   resolve_conflicts_on_update = "PRESERVE"
 

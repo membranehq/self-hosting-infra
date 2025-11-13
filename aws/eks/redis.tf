@@ -24,10 +24,10 @@ resource "aws_elasticache_replication_group" "redis" {
   node_type      = var.redis_node_type      # e.g. "cache.t3.micro"
   port           = 6380
 
-  num_node_groups         = var.redis_shards             # shards
-  replicas_per_node_group = var.redis_replicas_per_shard # replicas per shard
+  num_node_groups            = var.redis_shards             # shards
+  replicas_per_node_group    = var.redis_replicas_per_shard # replicas per shard
   automatic_failover_enabled = true
-  multi_az_enabled = true  # Enable Multi-AZ
+  multi_az_enabled           = true # Enable Multi-AZ
 
   # Encryption configuration
   at_rest_encryption_enabled = true

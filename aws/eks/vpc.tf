@@ -5,7 +5,7 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
 
   tags = {
-    Name                                           = "${var.environment}-${var.project}-vpc"
+    Name                                            = "${var.environment}-${var.project}-vpc"
     Component                                       = "vpc"
     "kubernetes.io/cluster/${var.eks_cluster_name}" = "shared"
   }
@@ -30,9 +30,9 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name                                           = "${var.environment}-${var.project}-public-${var.availability_zones[count.index]}"
+    Name                                            = "${var.environment}-${var.project}-public-${var.availability_zones[count.index]}"
     Component                                       = "vpc-subnet-public"
-    "kubernetes.io/role/elb"                       = "1"
+    "kubernetes.io/role/elb"                        = "1"
     "kubernetes.io/cluster/${var.eks_cluster_name}" = "shared"
   }
 }
@@ -45,9 +45,9 @@ resource "aws_subnet" "private" {
   availability_zone = var.availability_zones[count.index]
 
   tags = {
-    Name                                           = "${var.environment}-${var.project}-private-${var.availability_zones[count.index]}"
+    Name                                            = "${var.environment}-${var.project}-private-${var.availability_zones[count.index]}"
     Component                                       = "vpc-subnet-private"
-    "kubernetes.io/role/internal-elb"              = "1"
+    "kubernetes.io/role/internal-elb"               = "1"
     "kubernetes.io/cluster/${var.eks_cluster_name}" = "shared"
   }
 }

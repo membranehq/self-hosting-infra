@@ -74,8 +74,8 @@ output "redis_port" {
 }
 
 output "redis_uri" {
-  value     = "rediss://${aws_elasticache_replication_group.redis.configuration_endpoint_address}:${aws_elasticache_replication_group.redis.port}"
-  sensitive = true
+  value       = "rediss://${aws_elasticache_replication_group.redis.configuration_endpoint_address}:${aws_elasticache_replication_group.redis.port}"
+  sensitive   = true
   description = "Redis URI with TLS (rediss://)"
 }
 
