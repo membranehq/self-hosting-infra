@@ -1,39 +1,39 @@
 resource "aws_security_group" "redis" {
   name        = "${var.environment}-redis-sg"
-  description = "Security group for Redis"
+  description = "Security group for Redis (ElastiCache)"
   vpc_id      = var.vpc_id
+
+  # Allow only from EKS cluster (TLS port)
+  ingress {
+    description     = "App Redis TLS port"
+    from_port       = 6380
+    to_port         = 6380
+    protocol        = "tcp"
+    security_groups = [data.aws_eks_cluster.cluster.vpc_config[0].cluster_security_group_id]
+  }
+
+  # Allow from VPC CIDR (all EKS nodes)
+  ingress {
+    description = "App Redis TLS port from VPC"
+    from_port   = 6380
+    to_port     = 6380
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   lifecycle {
     create_before_destroy = true
   }
 
   tags = {
-    Service = "redis"
-  }
-}
-
-# Allow access from EKS cluster security group
-resource "aws_vpc_security_group_ingress_rule" "redis_from_eks_cluster" {
-  security_group_id            = aws_security_group.redis.id
-  ip_protocol                  = "tcp"
-  from_port                    = 6379
-  to_port                      = 6379
-  referenced_security_group_id = data.aws_eks_cluster.cluster.vpc_config[0].cluster_security_group_id
-
-  tags = {
-    Service = "redis"
-  }
-}
-
-# Allow access from VPC CIDR (all EKS nodes)
-resource "aws_vpc_security_group_ingress_rule" "redis_from_vpc" {
-  security_group_id = aws_security_group.redis.id
-  ip_protocol       = "tcp"
-  from_port         = 6379
-  to_port           = 6379
-  cidr_ipv4         = var.vpc_cidr
-
-  tags = {
-    Service = "redis"
+    Service     = "redis"
+    Environment = var.environment
   }
 }

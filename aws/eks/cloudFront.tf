@@ -12,6 +12,8 @@ resource "aws_cloudfront_distribution" "static" {
 
   aliases = ["static.${var.environment}.${var.hosted_zone_name}"]
 
+  depends_on = [aws_acm_certificate_validation.cloudfront]
+
   origin {
     domain_name              = aws_s3_bucket.static.bucket_regional_domain_name
     origin_id                = aws_s3_bucket.static.id
@@ -39,7 +41,7 @@ resource "aws_cloudfront_distribution" "static" {
   }
 
   viewer_certificate {
-    acm_certificate_arn      = aws_acm_certificate.cloudfront.arn
+    acm_certificate_arn      = aws_acm_certificate_validation.cloudfront.certificate_arn
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
   }

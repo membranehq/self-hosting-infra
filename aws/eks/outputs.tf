@@ -10,9 +10,19 @@ output "static_bucket_name" {
   value = aws_s3_bucket.static.bucket
 }
 
+output "redis_configuration_endpoint" {
+  value       = aws_elasticache_replication_group.redis.configuration_endpoint_address
+  description = "Use this with a cluster-aware client."
+}
+
+output "redis_port" {
+  value = aws_elasticache_replication_group.redis.port
+}
+
 output "redis_uri" {
-  value     = "redis://${aws_elasticache_replication_group.main.primary_endpoint_address}:6379"
+  value     = "rediss://${aws_elasticache_replication_group.redis.configuration_endpoint_address}:${aws_elasticache_replication_group.redis.port}"
   sensitive = true
+  description = "Redis URI with TLS (rediss://)"
 }
 
 output "static_uri" {
