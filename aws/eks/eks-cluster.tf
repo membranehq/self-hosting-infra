@@ -195,6 +195,7 @@ resource "aws_eks_node_group" "main" {
   capacity_type   = var.node_group_capacity_type
   instance_types  = var.node_group_instance_types
   disk_size       = var.node_group_disk_size
+  ami_type        = "AL2023_ARM_64_STANDARD"  # ARM64 architecture for Graviton instances
 
   scaling_config {
     desired_size = var.node_group_desired_size
@@ -216,9 +217,13 @@ resource "aws_eks_node_group" "main" {
     aws_iam_role_policy_attachment.node_group_registry_policy,
   ]
 
+  # These tags automatically propagate to EC2 instances and Auto Scaling Group
   tags = {
-    Name      = "${var.eks_cluster_name}-node-group"
-    Component = "eks-node-group"
+    Name        = "${var.eks_cluster_name}-node-group"
+    Component   = "eks-node-group"
+    CostCenter  = var.cost_center
+    Environment = var.environment
+    Project     = var.project
   }
 
   lifecycle {

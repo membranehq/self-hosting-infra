@@ -40,7 +40,10 @@ resource "aws_iam_role" "integration_app_sa" {
           "${replace(aws_eks_cluster.main.identity[0].oidc[0].issuer, "https://", "")}:aud" = "sts.amazonaws.com"
         }
         StringLike = {
-          "${replace(aws_eks_cluster.main.identity[0].oidc[0].issuer, "https://", "")}:sub" = "system:serviceaccount:*:integration-app"
+          "${replace(aws_eks_cluster.main.identity[0].oidc[0].issuer, "https://", "")}:sub" = [
+            "system:serviceaccount:*:integration-app",
+            "system:serviceaccount:*:membrane"
+          ]
         }
       }
     }]
@@ -149,6 +152,7 @@ resource "aws_iam_role_policy" "load_balancer_controller" {
           "elasticloadbalancing:DescribeLoadBalancers",
           "elasticloadbalancing:DescribeLoadBalancerAttributes",
           "elasticloadbalancing:DescribeListeners",
+          "elasticloadbalancing:DescribeListenerAttributes",
           "elasticloadbalancing:DescribeListenerCertificates",
           "elasticloadbalancing:DescribeSSLPolicies",
           "elasticloadbalancing:DescribeRules",

@@ -64,9 +64,14 @@ output "static_bucket_name" {
   value = aws_s3_bucket.static.bucket
 }
 
-output "redis_configuration_endpoint" {
-  value       = aws_elasticache_replication_group.redis.configuration_endpoint_address
-  description = "Use this with a cluster-aware client."
+output "redis_primary_endpoint" {
+  value       = aws_elasticache_replication_group.redis.primary_endpoint_address
+  description = "Primary endpoint for Redis (cluster mode disabled)"
+}
+
+output "redis_reader_endpoint" {
+  value       = aws_elasticache_replication_group.redis.reader_endpoint_address
+  description = "Reader endpoint for Redis (cluster mode disabled)"
 }
 
 output "redis_port" {
@@ -74,7 +79,7 @@ output "redis_port" {
 }
 
 output "redis_uri" {
-  value       = "rediss://${aws_elasticache_replication_group.redis.configuration_endpoint_address}:${aws_elasticache_replication_group.redis.port}"
+  value       = "rediss://${aws_elasticache_replication_group.redis.primary_endpoint_address}:${aws_elasticache_replication_group.redis.port}"
   sensitive   = true
   description = "Redis URI with TLS (rediss://)"
 }
@@ -83,9 +88,15 @@ output "static_uri" {
   value = "https://static.${var.environment}.${var.hosted_zone_name}"
 }
 
+output "membrane_sa_role_arn" {
+  value       = aws_iam_role.integration_app_sa.arn
+  description = "IAM role ARN for the membrane service account"
+}
+
+# Legacy output name for backwards compatibility
 output "integration_app_sa_role_arn" {
   value       = aws_iam_role.integration_app_sa.arn
-  description = "IAM role ARN for the integration-app service account"
+  description = "IAM role ARN for the integration-app service account (deprecated, use membrane_sa_role_arn)"
 }
 
 output "external_dns_role_arn" {
@@ -98,6 +109,11 @@ output "hosted_zone_name" {
   description = "Name of the hosted zone"
 }
 
+output "aws_region" {
+  value       = var.aws_region
+  description = "AWS region where resources are deployed"
+}
+
 output "load_balancer_controller_role_arn" {
   value       = aws_iam_role.load_balancer_controller.arn
   description = "IAM role ARN for AWS Load Balancer Controller"
@@ -106,4 +122,9 @@ output "load_balancer_controller_role_arn" {
 output "alb_certificate_arn" {
   value       = aws_acm_certificate.alb.arn
   description = "ARN of the ACM certificate for ALB"
+}
+
+output "nat_gateway_ips" {
+  value       = aws_eip.nat[*].public_ip
+  description = "Public IPs of NAT Gateways - whitelist these in MongoDB Atlas"
 }

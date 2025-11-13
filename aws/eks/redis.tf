@@ -13,19 +13,19 @@ resource "aws_elasticache_subnet_group" "redis" {
 }
 
 ############################################
-# Replication group — CLUSTER MODE ENABLED
+# Replication group — CLUSTER MODE DISABLED
 ############################################
 resource "aws_elasticache_replication_group" "redis" {
-  replication_group_id = "${var.environment}-redis-new"
-  description          = "Redis (cluster mode enabled) for ${var.project}"
+  replication_group_id = "${var.environment}-redis-standard"
+  description          = "Redis (cluster mode disabled) for ${var.project}"
 
   engine         = "redis"
   engine_version = var.redis_engine_version # e.g. "7.1.0"
   node_type      = var.redis_node_type      # e.g. "cache.t3.micro"
   port           = 6380
 
-  num_node_groups            = var.redis_shards             # shards
-  replicas_per_node_group    = var.redis_replicas_per_shard # replicas per shard
+  # Cluster mode disabled - single shard with replicas
+  num_cache_clusters         = var.redis_replicas_per_shard + 1 # primary + replicas
   automatic_failover_enabled = true
   multi_az_enabled           = true # Enable Multi-AZ
 
@@ -33,7 +33,7 @@ resource "aws_elasticache_replication_group" "redis" {
   at_rest_encryption_enabled = true
   transit_encryption_enabled = true
 
-  parameter_group_name = "default.redis7.cluster.on"
+  parameter_group_name = "default.redis7"
   subnet_group_name    = aws_elasticache_subnet_group.redis.name
   security_group_ids   = [aws_security_group.redis.id]
 
