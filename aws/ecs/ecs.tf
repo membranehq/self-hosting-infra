@@ -1,6 +1,6 @@
 locals {
-  # Use the configuration endpoint for cluster mode enabled Redis with TLS on port 6380
-  redis_configuration_endpoint = "rediss://${aws_elasticache_replication_group.redis.configuration_endpoint_address}:6380"
+  # Use the primary endpoint for non-cluster Redis on port 6379
+  redis_primary_endpoint = "redis://${aws_elasticache_replication_group.main.primary_endpoint_address}:6379"
 }
 
 resource "aws_ecs_cluster" "main" {
@@ -38,6 +38,7 @@ resource "aws_ecs_task_definition" "api" {
       ]
       environment = [
         { name = "NODE_ENV", value = "production" },
+        { name = "MIGRATIONS", value = "non-transactional" },
         { name = "BASE_URI", value = "https://${aws_route53_record.api.name}" },
         { name = "BASE_WEBHOOKS_URI", value = "https://${aws_route53_record.api.name}" },
         { name = "BASE_OAUTH_CALLBACK_URI", value = "https://${aws_route53_record.api.name}" },
@@ -52,7 +53,7 @@ resource "aws_ecs_task_definition" "api" {
         { name = "CONNECTORS_S3_BUCKET", value = aws_s3_bucket.connectors.id },
         { name = "STATIC_S3_BUCKET", value = aws_s3_bucket.static.id },
         { name = "BASE_STATIC_URI", value = "https://${aws_route53_record.static.name}" },
-        { name = "REDIS_CLUSTER_URI_1", value = local.redis_configuration_endpoint },
+        { name = "REDIS_URI", value = local.redis_primary_endpoint },
         { name = "REDIS_DISABLE_TLS_VERIFICATION", value = "true" },
         { name = "PORT", value = "5000" },
         { name = "HOST", value = "0.0.0.0" },
@@ -102,6 +103,7 @@ resource "aws_ecs_task_definition" "queued-tasks-worker" {
 
       environment = [
         { name = "NODE_ENV", value = "production" },
+        { name = "MIGRATIONS", value = "non-transactional" },
         { name = "IS_QUEUED_TASKS_WORKER", value = "1" },
         { name = "NODE_OPTIONS", value = "--max-old-space-size=4500" },
         { name = "BASE_URI", value = "https://${aws_route53_record.api.name}" },
@@ -118,8 +120,7 @@ resource "aws_ecs_task_definition" "queued-tasks-worker" {
         { name = "CONNECTORS_S3_BUCKET", value = aws_s3_bucket.connectors.id },
         { name = "STATIC_S3_BUCKET", value = aws_s3_bucket.static.id },
         { name = "BASE_STATIC_URI", value = "https://${aws_route53_record.static.name}" },
-        { name = "BASE_STATIC_URI", value = "https://static.int-membrane.com" },
-        { name = "REDIS_CLUSTER_URI_1", value = local.redis_configuration_endpoint },
+        { name = "REDIS_URI", value = local.redis_primary_endpoint },
         { name = "REDIS_DISABLE_TLS_VERIFICATION", value = "true" },
         { name = "PORT", value = "5000" },
         { name = "HOST", value = "0.0.0.0" },
@@ -169,6 +170,7 @@ resource "aws_ecs_task_definition" "instant-tasks-worker" {
 
       environment = [
         { name = "NODE_ENV", value = "production" },
+        { name = "MIGRATIONS", value = "non-transactional" },
         { name = "IS_INSTANT_TASKS_WORKER", value = "1" },
         { name = "NODE_OPTIONS", value = "--max-old-space-size=4500" },
         { name = "BASE_URI", value = "https://${aws_route53_record.api.name}" },
@@ -185,7 +187,7 @@ resource "aws_ecs_task_definition" "instant-tasks-worker" {
         { name = "CONNECTORS_S3_BUCKET", value = aws_s3_bucket.connectors.id },
         { name = "STATIC_S3_BUCKET", value = aws_s3_bucket.static.id },
         { name = "BASE_STATIC_URI", value = "https://${aws_route53_record.static.name}" },
-        { name = "REDIS_CLUSTER_URI_1", value = local.redis_configuration_endpoint },
+        { name = "REDIS_URI", value = local.redis_primary_endpoint },
         { name = "REDIS_DISABLE_TLS_VERIFICATION", value = "true" },
         { name = "PORT", value = "5000" },
         { name = "HOST", value = "0.0.0.0" },
@@ -235,6 +237,7 @@ resource "aws_ecs_task_definition" "orchestrator" {
 
       environment = [
         { name = "NODE_ENV", value = "production" },
+        { name = "MIGRATIONS", value = "non-transactional" },
         { name = "IS_ORCHESTRATOR", value = "1" },
         { name = "NODE_OPTIONS", value = "--max-old-space-size=4500" },
         { name = "BASE_URI", value = "https://${aws_route53_record.api.name}" },
@@ -251,7 +254,7 @@ resource "aws_ecs_task_definition" "orchestrator" {
         { name = "CONNECTORS_S3_BUCKET", value = aws_s3_bucket.connectors.id },
         { name = "STATIC_S3_BUCKET", value = aws_s3_bucket.static.id },
         { name = "BASE_STATIC_URI", value = "https://${aws_route53_record.static.name}" },
-        { name = "REDIS_CLUSTER_URI_1", value = local.redis_configuration_endpoint },
+        { name = "REDIS_URI", value = local.redis_primary_endpoint },
         { name = "REDIS_DISABLE_TLS_VERIFICATION", value = "true" },
         { name = "PORT", value = "5000" },
         { name = "HOST", value = "0.0.0.0" },
@@ -379,8 +382,8 @@ resource "aws_ecs_task_definition" "custom_code_runner" {
   family                   = "${var.environment}-custom-code-runner"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
-  cpu                      = 256
-  memory                   = 512
+  cpu                      = 1024
+  memory                   = 2048
   execution_role_arn       = aws_iam_role.ecs_execution.arn
   task_role_arn            = aws_iam_role.ecs_task.arn
 
@@ -582,9 +585,6 @@ resource "aws_service_discovery_service" "custom_code_runner" {
       ttl  = 10
     }
     routing_policy = "MULTIVALUE"
-  }
-  health_check_custom_config {
-    failure_threshold = 1
   }
 
   tags = {

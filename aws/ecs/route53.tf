@@ -3,7 +3,8 @@ resource "aws_route53_zone" "main" {
   comment = "HostedZone created by Route53 Registrar"
 
   tags = {
-    Service = "core"
+    Service     = "core"
+    Environment = "development"
   }
 }
 
@@ -55,7 +56,7 @@ resource "aws_route53_record" "alb_cert_validation" {
 
 resource "aws_route53_record" "api" {
   zone_id = aws_route53_zone.main.zone_id
-  name    = "api.${aws_route53_zone.main.name}"
+  name    = "api.${var.environment}.${aws_route53_zone.main.name}"
   type    = "A"
   alias {
     name                   = aws_lb.public.dns_name
@@ -66,7 +67,7 @@ resource "aws_route53_record" "api" {
 
 resource "aws_route53_record" "ui" {
   zone_id = aws_route53_zone.main.zone_id
-  name    = "ui.${aws_route53_zone.main.name}"
+  name    = "ui.${var.environment}.${aws_route53_zone.main.name}"
   type    = "A"
   alias {
     name                   = aws_lb.public.dns_name
@@ -77,7 +78,7 @@ resource "aws_route53_record" "ui" {
 
 resource "aws_route53_record" "console" {
   zone_id = aws_route53_zone.main.zone_id
-  name    = "console.${aws_route53_zone.main.name}"
+  name    = "console.${var.environment}.${aws_route53_zone.main.name}"
   type    = "A"
   alias {
     name                   = aws_lb.public.dns_name

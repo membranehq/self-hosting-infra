@@ -7,17 +7,33 @@ output "nat_gateway_allocation_ids" {
   value       = aws_eip.nat[*].id
   description = "Allocation IDs of the Elastic IPs for NAT Gateways"
 }
-output "primary_endpoint_address" {
-  value       = aws_elasticache_replication_group.redis.configuration_endpoint_address
-  description = "primary_endpoint_address"
+
+output "redis_primary_endpoint" {
+  value       = aws_elasticache_replication_group.main.primary_endpoint_address
+  description = "Redis primary endpoint address"
 }
 
-output "redis_cluster_member_nodes" {
-  value       = aws_elasticache_replication_group.redis.member_clusters
-  description = "List of Redis cluster member node IDs"
+output "redis_port" {
+  value       = aws_elasticache_replication_group.main.port
+  description = "Redis port"
 }
 
-output "redis_cluster_nodes" {
-  value       = aws_elasticache_replication_group.redis.member_clusters
-  description = "List of Redis cluster node addresses"
+output "docdb_endpoint" {
+  value       = var.enable_managed_database ? aws_docdb_cluster.main[0].endpoint : null
+  description = "DocumentDB cluster endpoint"
+}
+
+output "docdb_reader_endpoint" {
+  value       = var.enable_managed_database ? aws_docdb_cluster.main[0].reader_endpoint : null
+  description = "DocumentDB cluster reader endpoint"
+}
+
+output "bastion_instance_id" {
+  value       = aws_instance.bastion.id
+  description = "Bastion host instance ID - use with SSM Session Manager"
+}
+
+output "bastion_public_ip" {
+  value       = aws_instance.bastion.public_ip
+  description = "Bastion host public IP address"
 }

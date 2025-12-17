@@ -99,3 +99,44 @@ variable "custom_code_runner_image" {
   type        = string
   default     = "harbor.integration.app/core/custom-code-runner"
 }
+
+variable "docdb_family" {
+  description = "DocDB family"
+  type        = string
+  default     = "docdb5.0"
+}
+
+variable "docdb_engine_version" {
+  description = "DocDB engine version"
+  type        = string
+  default     = "5.0.0"
+}
+
+variable "docdb_instance_class" {
+  description = "DocDB instance class"
+  type        = string
+  default     = "db.t3.medium"
+}
+
+variable "enable_managed_database" {
+  description = "Enable managed database"
+  type        = bool
+  default     = true
+}
+
+variable "docdb_username" {
+  description = "DocDB username"
+  type        = string
+  default     = "admin"
+}
+
+variable "docdb_password" {
+  description = "DocDB password"
+  type        = string
+  sensitive   = true
+}
+
+variable "vpc_cidr" {
+  description = "VPC CIDR block"
+  type        = string
+}

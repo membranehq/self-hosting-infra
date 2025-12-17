@@ -1,6 +1,6 @@
 resource "aws_acm_certificate" "cloudfront" {
   provider          = aws.us-east-1
-  domain_name       = "static.int-membrane.com"
+  domain_name       = "static.${var.environment}.${aws_route53_zone.main.name}"
   validation_method = "DNS"
 
   lifecycle {
@@ -19,11 +19,11 @@ resource "aws_acm_certificate_validation" "cloudfront" {
 }
 
 resource "aws_acm_certificate" "alb" {
-  domain_name = "int-membrane.com"
+  domain_name = "${var.environment}.${aws_route53_zone.main.name}"
   subject_alternative_names = [
-    "api.int-membrane.com",
-    "ui.int-membrane.com",
-    "console.int-membrane.com"
+    "api.${var.environment}.${aws_route53_zone.main.name}",
+    "ui.${var.environment}.${aws_route53_zone.main.name}",
+    "console.${var.environment}.${aws_route53_zone.main.name}"
   ]
   validation_method = "DNS"
 

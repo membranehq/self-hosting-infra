@@ -10,9 +10,7 @@ resource "aws_cloudfront_distribution" "static" {
   enabled             = true
   default_root_object = "index.html"
 
-  aliases = ["static.${aws_route53_zone.main.name}"]
-
-  depends_on = [aws_acm_certificate_validation.cloudfront]
+  aliases = ["static.${var.environment}.${aws_route53_zone.main.name}"]
 
   origin {
     domain_name              = aws_s3_bucket.static.bucket_regional_domain_name
