@@ -49,3 +49,8 @@ variable "private_endpoint_subnet_cidr" {
   type        = string
   default     = null
 }
+
+variable "cors_allowed_origins" {
+  description = "List of origins allowed to make cross-origin requests to the storage account (e.g. [\"https://ui.example.com\", \"https://console.example.com\"])."
+  type        = list(string)
+}

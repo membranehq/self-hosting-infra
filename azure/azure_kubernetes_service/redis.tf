@@ -5,11 +5,9 @@ resource "azurerm_redis_cache" "main" {
   capacity             = 1
   family               = "C"
   sku_name             = "Standard"
-  minimum_tls_version  = "1.2"
-  non_ssl_port_enabled = true
-
-  # Enable both public and private access
-  public_network_access_enabled = true
+  minimum_tls_version           = "1.2"
+  non_ssl_port_enabled          = false
+  public_network_access_enabled = false
 
   redis_configuration {
     maxmemory_policy = "allkeys-lru"

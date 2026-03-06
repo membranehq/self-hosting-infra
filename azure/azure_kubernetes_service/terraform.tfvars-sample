@@ -8,3 +8,4 @@ aks_cluster_name             = "<your-aks-cluster-name>"
 kubernetes_namespace         = "<your-kubernetes-namespace>"
 aks_vnet_name                = "<your-aks-vnet-name>"
 private_endpoint_subnet_cidr = "<your-aks-private-endpoint-subnet-cidr>"
+cors_allowed_origins         = ["https://ui.<your-domain>", "https://console.<your-domain>"]
