@@ -1,15 +1,6 @@
-# Get the AKS node resource group to find the VNet (if not specified)
-data "azurerm_resource_group" "node_resource_group" {
-  count = var.resource_group_name == null ? 1 : 0
-  name  = data.azurerm_kubernetes_cluster.main.node_resource_group
-}
-
-# Get the AKS VNet using provided name or discovery
 data "azurerm_virtual_network" "aks_vnet" {
-  # Use provided VNet name or attempt discovery
-  name = var.aks_vnet_name != null ? var.aks_vnet_name : "aks-vnet-${var.aks_cluster_name}"
-  # Use provided resource group or discovered node resource group
-  resource_group_name = var.resource_group_name != null ? var.resource_group_name : data.azurerm_resource_group.node_resource_group[0].name
+  name                = var.aks_vnet_name != null ? var.aks_vnet_name : "aks-vnet-${var.aks_cluster_name}"
+  resource_group_name = var.resource_group_name
 }
 
 
@@ -29,7 +20,7 @@ locals {
 # Create a dedicated subnet for private endpoints with new name
 resource "azurerm_subnet" "private_endpoints" {
   name                 = "${var.environment}-integration-app-pe-subnet-v2" # New name to force recreation
-  resource_group_name  = var.resource_group_name != null ? var.resource_group_name : data.azurerm_resource_group.node_resource_group[0].name
+  resource_group_name  = var.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.aks_vnet.name
   address_prefixes     = [local.private_endpoint_subnet_cidr]
 

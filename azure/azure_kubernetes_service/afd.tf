@@ -27,10 +27,10 @@ resource "azurerm_cdn_frontdoor_origin" "static" {
   name                           = "${var.environment}-afd-static-origin"
   cdn_frontdoor_origin_group_id  = azurerm_cdn_frontdoor_origin_group.static.id
   enabled                        = true
-  host_name                      = "${azurerm_storage_account.main.name}.z13.web.core.windows.net"
+  host_name                      = azurerm_storage_account.main.primary_web_host
   http_port                      = 80
   https_port                     = 443
-  origin_host_header             = "${azurerm_storage_account.main.name}.z13.web.core.windows.net"
+  origin_host_header             = azurerm_storage_account.main.primary_web_host
   priority                       = 1
   weight                         = 1000
   certificate_name_check_enabled = true
@@ -52,7 +52,7 @@ resource "azurerm_cdn_frontdoor_route" "static" {
 }
 
 resource "azurerm_cdn_frontdoor_custom_domain" "static" {
-  name                     = "staticazureintmembrane"
+  name                     = "static${replace(var.dns_zone_name, ".", "")}"
   cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.static.id
   host_name                = "static.${var.dns_zone_name}"
 
