@@ -3,9 +3,7 @@ resource "azurerm_cdn_frontdoor_profile" "static" {
   resource_group_name = var.resource_group_name
   sku_name            = "Standard_AzureFrontDoor"
 
-  tags = {
-    Service = "core-azure"
-  }
+  tags = local.common_tags
 }
 
 resource "azurerm_cdn_frontdoor_endpoint" "static" {
@@ -20,6 +18,13 @@ resource "azurerm_cdn_frontdoor_origin_group" "static" {
   load_balancing {
     sample_size                 = 4
     successful_samples_required = 3
+  }
+
+  health_probe {
+    interval_in_seconds = 30
+    path                = "/"
+    protocol            = "Https"
+    request_type        = "HEAD"
   }
 }
 

@@ -19,7 +19,7 @@ locals {
 
 # Create a dedicated subnet for private endpoints with new name
 resource "azurerm_subnet" "private_endpoints" {
-  name                 = "${var.environment}-integration-app-pe-subnet-v2" # New name to force recreation
+  name                 = "${var.environment}-integration-app-pe-subnet"
   resource_group_name  = var.resource_group_name
   virtual_network_name = data.azurerm_virtual_network.aks_vnet.name
   address_prefixes     = [local.private_endpoint_subnet_cidr]

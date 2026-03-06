@@ -43,5 +43,5 @@ resource "azurerm_federated_identity_credential" "external_dns" {
   audience            = ["api://AzureADTokenExchange"]
   issuer              = data.azurerm_kubernetes_cluster.main.oidc_issuer_url
   parent_id           = azurerm_user_assigned_identity.external_dns.id
-  subject             = "system:serviceaccount:${var.kubernetes_namespace}:external-dns"
+  subject             = "system:serviceaccount:${var.kubernetes_namespace}:${var.external_dns_service_account_name}"
 }

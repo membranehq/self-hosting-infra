@@ -23,7 +23,7 @@ variable "resource_group_name" {
 }
 
 variable "dns_zone_name" {
-  description = ""
+  description = "Azure DNS zone name used for the static Front Door custom domain and External-DNS domain filter."
   type        = string
   default     = "azure.int-membrane.com"
 }
@@ -53,4 +53,10 @@ variable "private_endpoint_subnet_cidr" {
 variable "cors_allowed_origins" {
   description = "List of origins allowed to make cross-origin requests to the storage account (e.g. [\"https://ui.example.com\", \"https://console.example.com\"])."
   type        = list(string)
+}
+
+variable "external_dns_service_account_name" {
+  description = "Name of the Kubernetes service account used by External-DNS. Must match the serviceAccount.name in the External-DNS Helm chart values."
+  type        = string
+  default     = "external-dns"
 }
