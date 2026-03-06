@@ -127,7 +127,7 @@ helm install external-dns external-dns/external-dns \
   --set policy=sync \
   --set registry=txt \
   --set txtOwnerId=$(terraform output -raw eks_cluster_name) \
-  --set domainFilters[0]=$HOSTED_ZONE_NAME
+  --set "domainFilters[0]=$HOSTED_ZONE_NAME"
 
 # Verify the controller is running
 kubectl get pods -n kube-system -l app.kubernetes.io/name=external-dns
@@ -193,7 +193,7 @@ kubectl get pods -n ingress-nginx
 # Verify the IngressClass was created
 kubectl get ingressclass
 
-# Get the NLB DNS name (you'll need to point your DNS records to this)
+# Get the NLB DNS name (you\'ll need to point your DNS records to this)
 kubectl get svc -n ingress-nginx nginx-ingress-ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
 ```
 
