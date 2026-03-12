@@ -30,18 +30,12 @@ resource "azurerm_role_assignment" "external_dns_reader" {
   principal_id         = azurerm_user_assigned_identity.external_dns.principal_id
 }
 
-# Data source to get AKS cluster OIDC issuer URL
-data "azurerm_kubernetes_cluster" "main" {
-  name                = var.aks_cluster_name
-  resource_group_name = var.resource_group_name
-}
-
 # Federated identity credential for Workload Identity
 resource "azurerm_federated_identity_credential" "external_dns" {
   name                = "external-dns-federation"
   resource_group_name = var.resource_group_name
   audience            = ["api://AzureADTokenExchange"]
-  issuer              = data.azurerm_kubernetes_cluster.main.oidc_issuer_url
+  issuer              = azurerm_kubernetes_cluster.main.oidc_issuer_url
   parent_id           = azurerm_user_assigned_identity.external_dns.id
   subject             = "system:serviceaccount:${var.kubernetes_namespace}:${var.external_dns_service_account_name}"
 }
