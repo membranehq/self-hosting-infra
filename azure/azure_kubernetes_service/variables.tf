@@ -38,12 +38,6 @@ variable "kubernetes_namespace" {
   type        = string
 }
 
-variable "aks_vnet_name" {
-  description = "Name of the AKS VNet (if not provided, will attempt to discover)"
-  type        = string
-  default     = null
-}
-
 variable "private_endpoint_subnet_cidr" {
   description = "CIDR block for private endpoints subnet. If not provided, will calculate dynamically."
   type        = string
