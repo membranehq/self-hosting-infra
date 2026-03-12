@@ -1,11 +1,28 @@
-environment                  = "<your-environment-dev-test-stage-prod>"
-location                     = "<your-aks-resource-group-location>"
-project                      = "integration-app"
-resource_group_name          = "<your-resource-group-name"
-dns_zone_name                = "<your-dns-zone-name>"
+environment         = "<your-environment-dev-test-stage-prod>"
+location            = "<your-azure-region>"
+project             = "integration-app"
+resource_group_name = "<your-resource-group-name>"
+dns_zone_name       = "<your-dns-zone-name>"
 
-aks_cluster_name             = "<your-aks-cluster-name>"
-kubernetes_namespace         = "<your-kubernetes-namespace>"
-aks_vnet_name                = "<your-aks-vnet-name>"
-private_endpoint_subnet_cidr = "<your-aks-private-endpoint-subnet-cidr>"
-cors_allowed_origins         = ["https://ui.<your-domain>", "https://console.<your-domain>"]
+aks_cluster_name     = "<your-aks-cluster-name>"
+kubernetes_namespace = "<your-kubernetes-namespace>"
+kubernetes_version   = "1.32"
+
+# Networking
+vnet_cidr        = "10.0.0.0/16"
+node_subnet_cidr = "10.0.0.0/22"
+pod_cidr         = "192.168.0.0/16" # Override if 192.168.x.x conflicts with peered/on-prem networks
+service_cidr     = "172.16.0.0/16"
+
+# Node pools
+system_node_vm_size = "Standard_D2s_v5"
+system_node_count   = 2
+user_node_vm_size   = "Standard_D4s_v5"
+user_node_min_count = 1
+user_node_max_count = 10
+
+# API server access — restrict to your office/VPN/CI CIDRs (empty list and 0.0.0.0/0 are rejected)
+api_server_authorized_ip_ranges = ["<your-ip>/32"]
+
+# Storage CORS
+cors_allowed_origins = ["https://ui.<your-domain>", "https://console.<your-domain>"]
