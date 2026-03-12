@@ -60,3 +60,78 @@ variable "external_dns_service_account_name" {
   type        = string
   default     = "external-dns"
 }
+
+variable "kubernetes_version" {
+  description = "Kubernetes version for the AKS cluster."
+  type        = string
+  default     = "1.32"
+}
+
+variable "vnet_cidr" {
+  description = "CIDR block for the virtual network."
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "node_subnet_cidr" {
+  description = "CIDR block for the node subnet. Must be within vnet_cidr and must not overlap with pod_cidr or service_cidr."
+  type        = string
+  default     = "10.0.0.0/22"
+}
+
+variable "pod_cidr" {
+  description = "CIDR block for pod IPs (Azure CNI Overlay — must not overlap with vnet_cidr or service_cidr). WARNING: the default 192.168.0.0/16 is common in office/home networks; override if this conflicts with peered or on-premises network ranges."
+  type        = string
+  default     = "192.168.0.0/16"
+}
+
+variable "service_cidr" {
+  description = "CIDR block for Kubernetes service IPs (must not overlap with vnet_cidr or pod_cidr)."
+  type        = string
+  default     = "172.16.0.0/16"
+}
+
+variable "system_node_vm_size" {
+  description = "VM size for the system node pool. Ephemeral OS disk size is limited by the VM's cache disk size (Standard_D2s_v5 = 75 GiB)."
+  type        = string
+  default     = "Standard_D2s_v5"
+}
+
+variable "system_node_count" {
+  description = "Fixed number of nodes in the system node pool."
+  type        = number
+  default     = 2
+}
+
+variable "user_node_vm_size" {
+  description = "VM size for the user node pool. Ephemeral OS disk size is limited by the VM's cache disk size (Standard_D4s_v5 = 150 GiB)."
+  type        = string
+  default     = "Standard_D4s_v5"
+}
+
+variable "user_node_min_count" {
+  description = "Minimum number of nodes in the user node pool (auto-scaling)."
+  type        = number
+  default     = 1
+}
+
+variable "user_node_max_count" {
+  description = "Maximum number of nodes in the user node pool (auto-scaling)."
+  type        = number
+  default     = 10
+}
+
+variable "api_server_authorized_ip_ranges" {
+  description = "List of CIDR blocks authorized to access the Kubernetes API server. Must contain at least one entry and must not include 0.0.0.0/0."
+  type        = list(string)
+
+  validation {
+    condition     = length(var.api_server_authorized_ip_ranges) > 0
+    error_message = "api_server_authorized_ip_ranges must not be empty. Specify at least one CIDR block."
+  }
+
+  validation {
+    condition     = !contains(var.api_server_authorized_ip_ranges, "0.0.0.0/0")
+    error_message = "api_server_authorized_ip_ranges must not contain 0.0.0.0/0. Specify explicit CIDRs for your office, VPN, and CI/CD egress IPs."
+  }
+}
