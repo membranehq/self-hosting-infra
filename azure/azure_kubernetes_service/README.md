@@ -1,64 +1,66 @@
 # Azure Kubernetes Service Infrastructure for Membrane
 
-This Terraform module deploys the supporting Azure infrastructure for running Membrane on an **existing** AKS cluster. It does not provision the AKS cluster itself — it layers on the storage, caching, CDN, networking, and identity resources required by the application.
+This Terraform module creates a complete Azure infrastructure stack for running Membrane on AKS:
+VNet, AKS cluster, node pools, Redis, Blob Storage, Azure Front Door, and External-DNS workload identity.
+A single `terraform apply` provisions everything from scratch.
 
 ## Architecture Overview
 
 ### Core Components
 
-1. **Azure Cache for Redis** - Caching and task queue layer (replaces AWS ElastiCache):
-   - Standard C1 SKU with TLS 1.2 minimum
-   - Private endpoint inside the AKS VNet
-   - Private DNS zone linked to the AKS VNet for in-cluster resolution
+1. **Virtual Network** - Isolated network for all cluster and application resources:
+   - Node subnet for AKS nodes (Azure CNI Overlay)
+   - Private endpoint subnet for Azure services
+   - NSG on the private endpoint subnet (Redis ports 6379/6380 from VNet)
 
-2. **Azure Storage Account** - Object storage with containers:
+2. **AKS Cluster** - Kubernetes 1.32 with Azure CNI Overlay and Cilium eBPF dataplane:
+   - System node pool: 2× Standard_D2s_v5, fixed count, Ephemeral OS, critical addons only
+   - User node pool: Standard_D4s_v5, auto-scales 1–10 nodes, Ephemeral OS
+   - OIDC issuer + Workload Identity enabled
+   - Patch auto-upgrade channel
+   - Network Contributor role on node subnet
+
+3. **Azure Cache for Redis** - Caching and task queue layer:
+   - Standard C1 SKU with TLS 1.2 minimum
+   - Private endpoint inside the node VNet
+   - Private DNS zone linked to the VNet for in-cluster resolution
+
+4. **Azure Storage Account** - Object storage with containers:
    - `membrane-{env}-temp` - Temporary files (7-day lifecycle policy)
    - `membrane-{env}-connectors` - Connector files
    - `$web` - Static website hosting (auto-created by Azure)
 
-3. **Azure Front Door** - CDN for static content (`static.{dns_zone_name}`):
+5. **Azure Front Door** - CDN for static content (`static.{dns_zone_name}`):
    - Standard SKU with managed TLS certificate
    - Compression and 7-day cache rules for static assets
    - DNS validation record auto-created in the DNS zone
 
-4. **External-DNS Managed Identity** - Workload identity for automatic DNS management:
+6. **External-DNS Managed Identity** - Workload identity for automatic DNS management:
    - User-assigned managed identity with DNS Zone Contributor role
    - Federated identity credential linked to the AKS OIDC issuer
    - Grants the `external-dns` Kubernetes service account permission to manage DNS records
 
-5. **Network Infrastructure** - Private connectivity inside the AKS VNet:
-   - Dedicated `/24` subnet for private endpoints
-   - NSG allowing Redis ports (6379/6380) from the VNet CIDR
-
-### What This Module Does NOT Create
-
-- The AKS cluster itself (must exist before applying)
-- The DNS zone (must exist before applying)
-- The resource group (must exist before applying)
-- Application secrets / Key Vault (manage these via Kubernetes secrets or External Secrets Operator)
-
 ## Prerequisites
 
-- Existing AKS cluster with **OIDC issuer enabled** (required for workload identity)
-- Existing Azure DNS zone in the same resource group
-- Terraform >= 1.11.3
+- Azure subscription with appropriate permissions
+- Terraform >= 1.5.0
 - Azure CLI installed and authenticated
-- Service Principal with appropriate permissions (see Service Principal Setup below)
+- Existing Azure DNS zone in the resource group
+- Service Principal with Owner permissions on the resource group (see Service Principal Setup)
 
-### Verify OIDC Issuer is Enabled
+### One-time subscription setup
 
-```bash
-az aks show --name <your-cluster-name> --resource-group <your-resource-group> \
-  --query "oidcIssuerProfile.enabled"
-# Must return: true
-```
-
-To enable it if not already on:
+Azure CNI Overlay and Cilium dataplane are GA for AKS 1.28+. Ensure the resource provider is registered:
 
 ```bash
-az aks update --name <your-cluster-name> --resource-group <your-resource-group> \
-  --enable-oidc-issuer
+az provider show --namespace Microsoft.ContainerService --query registrationState
+# Expected: "Registered"
+
+# If not registered:
+az provider register --namespace Microsoft.ContainerService
 ```
+
+No feature flag registration is required for AKS 1.32 with Azure CNI Overlay and Cilium.
 
 ## Service Principal Setup
 
@@ -79,7 +81,7 @@ The Terraform configuration requires a Service Principal with permissions to cre
      --scope "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/YOUR_RESOURCE_GROUP"
    ```
 
-3. **Grant Owner role** on the resource group (required to create role assignments for External-DNS):
+3. **Grant Owner role** on the resource group (required to create role assignments for External-DNS and AKS):
 
    ```bash
    az role assignment create --assignee YOUR_CLIENT_ID \
@@ -87,7 +89,7 @@ The Terraform configuration requires a Service Principal with permissions to cre
      --scope "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/YOUR_RESOURCE_GROUP"
    ```
 
-   The Owner role is necessary because this module creates `DNS Zone Contributor` and `Reader` role assignments for the External-DNS managed identity.
+   The Owner role is necessary because this module creates `DNS Zone Contributor`, `Reader`, and `Network Contributor` role assignments.
 
 ## Configuration
 
@@ -97,31 +99,30 @@ The Terraform configuration requires a Service Principal with permissions to cre
    cp terraform.tfvars-sample terraform.tfvars
    ```
 
-2. Update the variables in `terraform.tfvars` with your values:
-
-   ```hcl
-   environment          = "prod"
-   location             = "eastus"
-   project              = "membrane"
-   resource_group_name  = "your-resource-group-name"
-   dns_zone_name        = "your-dns-zone.example.com"
-
-   aks_cluster_name     = "your-aks-cluster-name"
-   kubernetes_namespace = "production"
-   aks_vnet_name        = "your-aks-vnet-name"
-   ```
+2. Update the variables in `terraform.tfvars` with your values.
 
    | Variable | Required | Default | Description |
    |---|---|---|---|
    | `environment` | No | `test` | Environment name (dev, staging, prod) |
    | `location` | No | `eastus` | Azure region |
-   | `project` | No | `membrane` | Project name used in resource naming |
-   | `resource_group_name` | No | `membrane-rg` | Resource group for all created resources |
+   | `project` | No | `integration-app` | Project name used in resource naming |
+   | `resource_group_name` | No | `integration-app-rg` | Resource group for all created resources |
    | `dns_zone_name` | No | `azure.int-membrane.com` | Azure DNS zone name |
-   | `aks_cluster_name` | **Yes** | — | Name of the existing AKS cluster |
+   | `aks_cluster_name` | **Yes** | — | Name of the AKS cluster to create |
    | `kubernetes_namespace` | **Yes** | — | Kubernetes namespace where Integration.app is deployed |
-   | `aks_vnet_name` | No | `aks-vnet-{cluster_name}` | AKS VNet name; auto-discovered if omitted |
+   | `kubernetes_version` | No | `1.32` | Kubernetes version |
+   | `vnet_cidr` | No | `10.0.0.0/16` | VNet address space |
+   | `node_subnet_cidr` | No | `10.0.0.0/22` | Node subnet CIDR (must not overlap pod/service CIDRs) |
+   | `pod_cidr` | No | `192.168.0.0/16` | Pod overlay CIDR — override if conflicts with peered/on-prem ranges |
+   | `service_cidr` | No | `172.16.0.0/16` | Kubernetes service CIDR |
+   | `system_node_vm_size` | No | `Standard_D2s_v5` | System pool VM size (os_disk_size_gb capped at cache size) |
+   | `system_node_count` | No | `2` | System pool fixed count |
+   | `user_node_vm_size` | No | `Standard_D4s_v5` | User pool VM size |
+   | `user_node_min_count` | No | `1` | User pool min nodes |
+   | `user_node_max_count` | No | `10` | User pool max nodes |
+   | `api_server_authorized_ip_ranges` | **Yes** | — | CIDRs for API server access (non-empty, no 0.0.0.0/0) |
    | `private_endpoint_subnet_cidr` | No | auto-calculated | CIDR for the private endpoints subnet |
+   | `cors_allowed_origins` | **Yes** | — | Allowed origins for storage CORS |
 
 ## Deployment
 
@@ -145,7 +146,15 @@ The Terraform configuration requires a Service Principal with permissions to cre
 
 ## Post-Deployment Steps
 
-1. **Configure External-DNS** in your AKS cluster using the identity outputs:
+1. **Configure kubectl** to access the cluster:
+
+   ```bash
+   az aks get-credentials --resource-group <resource-group> --name <cluster-name>
+   # Or use the kubeconfig output (stored encrypted in state):
+   terraform output -raw kube_config > ~/.kube/aks-config
+   ```
+
+2. **Configure External-DNS** in your AKS cluster using the identity outputs:
 
    ```bash
    terraform output external_dns_identity_client_id
@@ -172,7 +181,7 @@ The Terraform configuration requires a Service Principal with permissions to cre
      - "<dns_zone_name output>"
    ```
 
-2. **Configure the Integration.app Helm chart** with storage and Redis values:
+3. **Configure the Integration.app Helm chart** with storage and Redis values:
 
    ```bash
    terraform output redis_uri                  # sensitive - use as REDIS_URI env var
@@ -182,15 +191,96 @@ The Terraform configuration requires a Service Principal with permissions to cre
    terraform output static_uri
    ```
 
-3. **Upload static assets** to the `$web` container of the storage account for the Front Door origin to serve.
+4. **Upload static assets** to the `$web` container of the storage account for the Front Door origin to serve.
 
-4. **Verify DNS validation**: After apply, Azure Front Door validates the custom domain via the TXT record created in the DNS zone. This can take up to 30 minutes.
+5. **Verify DNS validation**: After apply, Azure Front Door validates the custom domain via the TXT record created in the DNS zone. This can take up to 30 minutes.
+
+## Migration for Existing Users
+
+If you have an existing AKS cluster and VNet that were created outside Terraform, you can import them into state rather than recreating.
+
+### Phase 0 — Verify CNI plugin compatibility
+
+This module manages an AKS cluster using Azure CNI Overlay. Clusters created with kubenet or standard Azure CNI (non-overlay) **cannot be migrated** — they must be recreated.
+
+```bash
+az aks show \
+  --resource-group <RG> \
+  --name <CLUSTER_NAME> \
+  --query "networkProfile.{plugin:networkPlugin,mode:networkPluginMode}" \
+  --output json
+```
+
+Expected output (both fields must match):
+
+```json
+{"mode": "Overlay", "plugin": "azure"}
+```
+
+If the output is different, do not proceed with import. Plan a blue-green migration: provision a new cluster with this module, migrate workloads using kubectl, then decommission the old cluster.
+
+### Phase 1 — Import existing resources
+
+**Preferred approach (Terraform ≥ 1.5.0):** Create a temporary `imports.tf` file with native import blocks. This makes the migration plan-visible and reviewable before applying:
+
+```hcl
+# Create this file as azure/azure_kubernetes_service/imports.tf before running terraform plan
+import {
+  to = azurerm_virtual_network.main
+  id = "/subscriptions/SUB_ID/resourceGroups/RG/providers/Microsoft.Network/virtualNetworks/VNET_NAME"
+}
+import {
+  to = azurerm_subnet.nodes
+  id = "/subscriptions/SUB_ID/resourceGroups/RG/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/NODE_SUBNET_NAME"
+}
+import {
+  to = azurerm_subnet.private_endpoints
+  id = "/subscriptions/SUB_ID/resourceGroups/RG/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/PE_SUBNET_NAME"
+}
+import {
+  to = azurerm_network_security_group.private_endpoints
+  id = "/subscriptions/SUB_ID/resourceGroups/RG/providers/Microsoft.Network/networkSecurityGroups/NSG_NAME"
+}
+import {
+  to = azurerm_subnet_network_security_group_association.private_endpoints
+  id = "/subscriptions/SUB_ID/resourceGroups/RG/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/PE_SUBNET_NAME"
+}
+import {
+  to = azurerm_kubernetes_cluster.main
+  id = "/subscriptions/SUB_ID/resourceGroups/RG/providers/Microsoft.ContainerService/managedClusters/CLUSTER_NAME"
+}
+# Only if a Network Contributor role assignment already exists for the cluster identity:
+# import {
+#   to = azurerm_role_assignment.aks_network_contributor
+#   id = "/subscriptions/SUB_ID/resourceGroups/RG/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/NODE_SUBNET_NAME/providers/Microsoft.Authorization/roleAssignments/ASSIGNMENT_ID"
+# }
+```
+
+If no Network Contributor role assignment exists yet, omit the last import block — Terraform will create it.
+
+### Phase 2 — Verify no destructive changes
+
+```bash
+terraform plan -out=import.tfplan
+```
+
+Review the plan output carefully. Acceptable: `~` (in-place update) for tag diffs.
+**Stop if you see `-/+` (destroy+recreate) or `-` (destroy) for any imported resource.**
+
+Remove `imports.tf` after the plan is verified clean — import blocks are one-time operations.
+
+### Phase 3 — Apply only after clean plan
+
+```bash
+terraform apply import.tfplan
+rm azure/azure_kubernetes_service/imports.tf
+```
 
 ## Key Differences from AWS Deployment
 
 | AWS Service | Azure Equivalent | Notes |
 |---|---|---|
-| EKS | AKS | Cluster must exist before applying this module |
+| EKS | AKS | Provisioned by this module (Azure CNI Overlay + Cilium) |
 | ElastiCache Redis | Azure Cache for Redis | Redis-compatible, connected via private endpoint |
 | S3 | Azure Storage Account | Blob storage with static website hosting |
 | CloudFront | Azure Front Door | Standard SKU, static content only |
@@ -199,10 +289,11 @@ The Terraform configuration requires a Service Principal with permissions to cre
 
 ## Outputs
 
-After deployment, Terraform will output:
-
 | Output | Sensitive | Description |
 |---|---|---|
+| `cluster_name` | No | AKS cluster name |
+| `cluster_api_server_url` | No | Kubernetes API server URL |
+| `kube_config` | **Yes** | Raw kubeconfig — requires encrypted state backend |
 | `tmp_bucket_name` | No | Name of the temporary files container |
 | `connectors_bucket_name` | No | Name of the connectors container |
 | `redis_uri` | **Yes** | Redis connection string (SSL) |
@@ -222,27 +313,31 @@ To destroy all resources created by this module:
 terraform destroy
 ```
 
-> **Note**: This will not delete the AKS cluster, DNS zone, or resource group, as those are not managed by this module.
+> **Note**: This will delete the AKS cluster, VNet, Redis, storage, and Front Door. It will not delete the DNS zone or resource group, as those are not managed by this module.
 
 ## Troubleshooting
 
-1. **Private endpoint subnet CIDR conflict**: If `terraform apply` fails with a subnet address conflict, set `private_endpoint_subnet_cidr` explicitly to an unused `/24` block within the VNet address space.
+1. **CIDR overlap error on plan**: Ensure `node_subnet_cidr`, `pod_cidr`, and `service_cidr` are all distinct and non-overlapping with each other and with `vnet_cidr`.
 
-2. **Redis connection refused from pods**: Confirm the private DNS zone `privatelink.redis.cache.windows.net` is linked to the AKS VNet. Check with:
+2. **Node provisioning fails after apply**: Verify the `azurerm_role_assignment.aks_network_contributor` was created. With `SystemAssigned` identity there can be a timing issue — run `terraform apply` a second time if needed.
+
+3. **Private endpoint subnet CIDR conflict**: If `terraform apply` fails with a subnet address conflict, set `private_endpoint_subnet_cidr` explicitly to an unused `/24` block within the VNet address space.
+
+4. **Redis connection refused from pods**: Confirm the private DNS zone `privatelink.redis.cache.windows.net` is linked to the AKS VNet. Check with:
    ```bash
    az network private-dns link vnet list \
      --resource-group <resource-group> \
      --zone-name privatelink.redis.cache.windows.net
    ```
 
-3. **External-DNS not creating records**: Verify the federated credential subject matches the actual service account:
+5. **External-DNS not creating records**: Verify the federated credential subject matches the actual service account:
    ```bash
    kubectl get serviceaccount external-dns -n <namespace> \
      -o jsonpath='{.metadata.annotations}'
    # Should include: azure.workload.identity/client-id
    ```
 
-4. **Front Door custom domain stuck in pending validation**: Check the TXT record was created:
+6. **Front Door custom domain stuck in pending validation**: Check the TXT record was created:
    ```bash
    az network dns record-set txt show \
      --resource-group <resource-group> \
@@ -250,4 +345,4 @@ terraform destroy
      --name _dnsauth.static
    ```
 
-5. **Static website not served via Front Door**: Ensure static files are uploaded to the `$web` container, not the `connectors` or `tmp` containers.
+7. **Static website not served via Front Door**: Ensure static files are uploaded to the `$web` container, not the `connectors` or `tmp` containers.
