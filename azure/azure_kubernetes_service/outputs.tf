@@ -50,3 +50,19 @@ output "tenant_id" {
   value       = data.azurerm_client_config.current.tenant_id
   description = "Azure tenant ID for External-DNS authentication"
 }
+
+output "cluster_name" {
+  value       = azurerm_kubernetes_cluster.main.name
+  description = "AKS cluster name"
+}
+
+output "cluster_api_server_url" {
+  value       = azurerm_kubernetes_cluster.main.kube_config[0].host
+  description = "Kubernetes API server URL"
+}
+
+output "kube_config" {
+  value       = azurerm_kubernetes_cluster.main.kube_config_raw
+  sensitive   = true
+  description = "Raw kubeconfig for kubectl access (sensitive). WARNING: Terraform state must be stored in an encrypted backend with restricted access when this output is used — it contains cluster admin credentials. Alternatively, use 'az aks get-credentials' to avoid storing credentials in state."
+}
