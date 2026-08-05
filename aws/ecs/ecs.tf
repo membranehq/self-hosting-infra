@@ -1,6 +1,41 @@
 locals {
   # Use the configuration endpoint for cluster mode enabled Redis with TLS on port 6380
   redis_configuration_endpoint = "rediss://${aws_elasticache_replication_group.redis.configuration_endpoint_address}:6380"
+
+  api_environment = [
+    { name = "NODE_ENV", value = "production" },
+    { name = "BASE_URI", value = "https://${aws_route53_record.api.name}" },
+    { name = "BASE_WEBHOOKS_URI", value = "https://${aws_route53_record.api.name}" },
+    { name = "BASE_OAUTH_CALLBACK_URI", value = "https://${aws_route53_record.api.name}" },
+    { name = "CUSTOM_CODE_RUNNER_URI", value = "http://custom-code-runner.${var.environment}.local:5000" },
+    { name = "AUTH0_DOMAIN", value = var.auth0_domain },
+    { name = "AUTH0_CLIENT_ID", value = var.auth0_client_id },
+    { name = "COPILOT_S3_BUCKET", value = aws_s3_bucket.tmp.id },
+    { name = "TMP_S3_BUCKET", value = aws_s3_bucket.tmp.id },
+    { name = "CONNECTORS_S3_BUCKET", value = aws_s3_bucket.connectors.id },
+    { name = "STATIC_S3_BUCKET", value = aws_s3_bucket.static.id },
+    { name = "BASE_STATIC_URI", value = "https://${aws_route53_record.static.name}" },
+    { name = "REDIS_CLUSTER_URI_1", value = local.redis_configuration_endpoint },
+    { name = "PORT", value = "5000" },
+    { name = "HOST", value = "0.0.0.0" },
+    { name = "AWS_REGION", value = var.AWS_REGION },
+  ]
+
+  api_secrets = [
+    { name = "SECRET", valueFrom = aws_ssm_parameter.secret.arn },
+    { name = "ENCRYPTION_SECRET", valueFrom = aws_ssm_parameter.encryption_secret.arn },
+    { name = "OPENAI_API_KEY", valueFrom = aws_ssm_parameter.openai_api_key.arn },
+    { name = "ANTHROPIC_API_KEY", valueFrom = aws_ssm_parameter.anthropic_api_key.arn },
+    { name = "AUTH0_CLIENT_SECRET", valueFrom = aws_ssm_parameter.auth0_client_secret.arn },
+    { name = "MONGO_URI", valueFrom = aws_secretsmanager_secret.mongo_uri.arn },
+  ]
+
+  # Worker roles: each runs the api image with a role flag and no load balancer
+  worker_roles = {
+    queued-tasks-worker  = "IS_QUEUED_TASKS_WORKER"
+    instant-tasks-worker = "IS_INSTANT_TASKS_WORKER"
+    orchestrator         = "IS_ORCHESTRATOR"
+  }
 }
 
 resource "aws_ecs_cluster" "main" {
@@ -36,36 +71,8 @@ resource "aws_ecs_task_definition" "api" {
           hostPort      = 5000
         }
       ]
-      environment = [
-        { name = "NODE_ENV", value = "production" },
-        { name = "BASE_URI", value = "https://${aws_route53_record.api.name}" },
-        { name = "BASE_WEBHOOKS_URI", value = "https://${aws_route53_record.api.name}" },
-        { name = "BASE_OAUTH_CALLBACK_URI", value = "https://${aws_route53_record.api.name}" },
-        { name = "CUSTOM_CODE_RUNNER_URI", value = "http://custom-code-runner.${var.environment}.local:5000" },
-        { name = "OPENAI_API_KEY", value = var.openai_api_key },
-        { name = "ANTHROPIC_API_KEY", value = var.anthropic_api_key },
-        { name = "AUTH0_DOMAIN", value = var.auth0_domain },
-        { name = "AUTH0_CLIENT_ID", value = var.auth0_client_id },
-        { name = "AUTH0_CLIENT_SECRET", value = var.auth0_client_secret },
-        { name = "COPILOT_S3_BUCKET", value = aws_s3_bucket.tmp.id },
-        { name = "TMP_S3_BUCKET", value = aws_s3_bucket.tmp.id },
-        { name = "CONNECTORS_S3_BUCKET", value = aws_s3_bucket.connectors.id },
-        { name = "STATIC_S3_BUCKET", value = aws_s3_bucket.static.id },
-        { name = "BASE_STATIC_URI", value = "https://${aws_route53_record.static.name}" },
-        { name = "REDIS_CLUSTER_URI_1", value = local.redis_configuration_endpoint },
-        { name = "REDIS_DISABLE_TLS_VERIFICATION", value = "true" },
-        { name = "PORT", value = "5000" },
-        { name = "HOST", value = "0.0.0.0" },
-        { name = "AWS_REGION", value = var.AWS_REGION },
-      ]
-      secrets = [
-        { name = "SECRET", valueFrom = aws_ssm_parameter.secret.arn },
-        { name = "ENCRYPTION_SECRET", valueFrom = aws_ssm_parameter.encryption_secret.arn },
-        {
-          name      = "MONGO_URI"
-          valueFrom = aws_secretsmanager_secret_version.mongo_uri.arn
-        }
-      ]
+      environment = local.api_environment
+      secrets     = local.api_secrets
       logConfiguration = {
         logDriver = "awslogs"
         options = {
@@ -85,190 +92,31 @@ resource "aws_ecs_task_definition" "api" {
   }
 }
 
-resource "aws_ecs_task_definition" "queued-tasks-worker" {
-  family                   = "${var.environment}-queued-tasks-worker"
+resource "aws_ecs_task_definition" "worker" {
+  for_each = local.worker_roles
+
+  family                   = "${var.environment}-${each.key}"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
+  cpu                      = "1024"
+  memory                   = "5120"
   execution_role_arn       = aws_iam_role.ecs_execution.arn
   task_role_arn            = aws_iam_role.ecs_task.arn
 
   container_definitions = jsonencode([
     {
-      name      = "queued-tasks-worker"
+      name      = each.key
       image     = "${var.api_image}:${var.image_tag}"
       essential = true
-
-      environment = [
-        { name = "NODE_ENV", value = "production" },
-        { name = "IS_QUEUED_TASKS_WORKER", value = "1" },
+      environment = concat([
+        { name = each.value, value = "1" },
         { name = "NODE_OPTIONS", value = "--max-old-space-size=4500" },
-        { name = "BASE_URI", value = "https://${aws_route53_record.api.name}" },
-        { name = "BASE_WEBHOOKS_URI", value = "https://${aws_route53_record.api.name}" },
-        { name = "BASE_OAUTH_CALLBACK_URI", value = "https://${aws_route53_record.api.name}" },
-        { name = "CUSTOM_CODE_RUNNER_URI", value = "http://custom-code-runner.${var.environment}.local:5000" },
-        { name = "OPENAI_API_KEY", value = var.openai_api_key },
-        { name = "ANTHROPIC_API_KEY", value = var.anthropic_api_key },
-        { name = "AUTH0_DOMAIN", value = var.auth0_domain },
-        { name = "AUTH0_CLIENT_ID", value = var.auth0_client_id },
-        { name = "AUTH0_CLIENT_SECRET", value = var.auth0_client_secret },
-        { name = "COPILOT_S3_BUCKET", value = aws_s3_bucket.tmp.id },
-        { name = "TMP_S3_BUCKET", value = aws_s3_bucket.tmp.id },
-        { name = "CONNECTORS_S3_BUCKET", value = aws_s3_bucket.connectors.id },
-        { name = "STATIC_S3_BUCKET", value = aws_s3_bucket.static.id },
-        { name = "BASE_STATIC_URI", value = "https://${aws_route53_record.static.name}" },
-        { name = "BASE_STATIC_URI", value = "https://static.int-membrane.com" },
-        { name = "REDIS_CLUSTER_URI_1", value = local.redis_configuration_endpoint },
-        { name = "REDIS_DISABLE_TLS_VERIFICATION", value = "true" },
-        { name = "PORT", value = "5000" },
-        { name = "HOST", value = "0.0.0.0" },
-        { name = "AWS_REGION", value = var.AWS_REGION },
-      ]
-      secrets = [
-        { name = "SECRET", valueFrom = aws_ssm_parameter.secret.arn },
-        { name = "ENCRYPTION_SECRET", valueFrom = aws_ssm_parameter.encryption_secret.arn },
-        {
-          name      = "MONGO_URI"
-          valueFrom = aws_secretsmanager_secret_version.mongo_uri.arn
-        }
-      ]
+      ], local.api_environment)
+      secrets = local.api_secrets
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          "awslogs-group"         = "/ecs/${var.environment}/queued-tasks-worker"
-          "awslogs-region"        = var.AWS_REGION
-          "awslogs-stream-prefix" = "ecs"
-        }
-      }
-      repositoryCredentials = {
-        credentialsParameter = aws_secretsmanager_secret.harbor_pull.arn
-      }
-    }
-  ])
-
-  tags = {
-    Service = "api"
-  }
-}
-
-resource "aws_ecs_task_definition" "instant-tasks-worker" {
-  family                   = "${var.environment}-instant-tasks-worker"
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
-  execution_role_arn       = aws_iam_role.ecs_execution.arn
-  task_role_arn            = aws_iam_role.ecs_task.arn
-
-  container_definitions = jsonencode([
-    {
-      name      = "instant-tasks-worker"
-      image     = "${var.api_image}:${var.image_tag}"
-      essential = true
-
-      environment = [
-        { name = "NODE_ENV", value = "production" },
-        { name = "IS_INSTANT_TASKS_WORKER", value = "1" },
-        { name = "NODE_OPTIONS", value = "--max-old-space-size=4500" },
-        { name = "BASE_URI", value = "https://${aws_route53_record.api.name}" },
-        { name = "BASE_WEBHOOKS_URI", value = "https://${aws_route53_record.api.name}" },
-        { name = "BASE_OAUTH_CALLBACK_URI", value = "https://${aws_route53_record.api.name}" },
-        { name = "CUSTOM_CODE_RUNNER_URI", value = "http://custom-code-runner.${var.environment}.local:5000" },
-        { name = "OPENAI_API_KEY", value = var.openai_api_key },
-        { name = "ANTHROPIC_API_KEY", value = var.anthropic_api_key },
-        { name = "AUTH0_DOMAIN", value = var.auth0_domain },
-        { name = "AUTH0_CLIENT_ID", value = var.auth0_client_id },
-        { name = "AUTH0_CLIENT_SECRET", value = var.auth0_client_secret },
-        { name = "COPILOT_S3_BUCKET", value = aws_s3_bucket.tmp.id },
-        { name = "TMP_S3_BUCKET", value = aws_s3_bucket.tmp.id },
-        { name = "CONNECTORS_S3_BUCKET", value = aws_s3_bucket.connectors.id },
-        { name = "STATIC_S3_BUCKET", value = aws_s3_bucket.static.id },
-        { name = "BASE_STATIC_URI", value = "https://${aws_route53_record.static.name}" },
-        { name = "REDIS_CLUSTER_URI_1", value = local.redis_configuration_endpoint },
-        { name = "REDIS_DISABLE_TLS_VERIFICATION", value = "true" },
-        { name = "PORT", value = "5000" },
-        { name = "HOST", value = "0.0.0.0" },
-        { name = "AWS_REGION", value = var.AWS_REGION },
-      ]
-      secrets = [
-        { name = "SECRET", valueFrom = aws_ssm_parameter.secret.arn },
-        { name = "ENCRYPTION_SECRET", valueFrom = aws_ssm_parameter.encryption_secret.arn },
-        {
-          name      = "MONGO_URI"
-          valueFrom = aws_secretsmanager_secret_version.mongo_uri.arn
-        }
-      ]
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          "awslogs-group"         = "/ecs/${var.environment}/instant-tasks-worker"
-          "awslogs-region"        = var.AWS_REGION
-          "awslogs-stream-prefix" = "ecs"
-        }
-      }
-      repositoryCredentials = {
-        credentialsParameter = aws_secretsmanager_secret.harbor_pull.arn
-      }
-    }
-  ])
-
-  tags = {
-    Service = "api"
-  }
-}
-
-resource "aws_ecs_task_definition" "orchestrator" {
-  family                   = "${var.environment}-orchestrator"
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
-  execution_role_arn       = aws_iam_role.ecs_execution.arn
-  task_role_arn            = aws_iam_role.ecs_task.arn
-
-  container_definitions = jsonencode([
-    {
-      name      = "orchestrator"
-      image     = "${var.api_image}:${var.image_tag}"
-      essential = true
-
-      environment = [
-        { name = "NODE_ENV", value = "production" },
-        { name = "IS_ORCHESTRATOR", value = "1" },
-        { name = "NODE_OPTIONS", value = "--max-old-space-size=4500" },
-        { name = "BASE_URI", value = "https://${aws_route53_record.api.name}" },
-        { name = "BASE_WEBHOOKS_URI", value = "https://${aws_route53_record.api.name}" },
-        { name = "BASE_OAUTH_CALLBACK_URI", value = "https://${aws_route53_record.api.name}" },
-        { name = "CUSTOM_CODE_RUNNER_URI", value = "http://custom-code-runner.${var.environment}.local:5000" },
-        { name = "OPENAI_API_KEY", value = var.openai_api_key },
-        { name = "ANTHROPIC_API_KEY", value = var.anthropic_api_key },
-        { name = "AUTH0_DOMAIN", value = var.auth0_domain },
-        { name = "AUTH0_CLIENT_ID", value = var.auth0_client_id },
-        { name = "AUTH0_CLIENT_SECRET", value = var.auth0_client_secret },
-        { name = "COPILOT_S3_BUCKET", value = aws_s3_bucket.tmp.id },
-        { name = "TMP_S3_BUCKET", value = aws_s3_bucket.tmp.id },
-        { name = "CONNECTORS_S3_BUCKET", value = aws_s3_bucket.connectors.id },
-        { name = "STATIC_S3_BUCKET", value = aws_s3_bucket.static.id },
-        { name = "BASE_STATIC_URI", value = "https://${aws_route53_record.static.name}" },
-        { name = "REDIS_CLUSTER_URI_1", value = local.redis_configuration_endpoint },
-        { name = "REDIS_DISABLE_TLS_VERIFICATION", value = "true" },
-        { name = "PORT", value = "5000" },
-        { name = "HOST", value = "0.0.0.0" },
-        { name = "AWS_REGION", value = var.AWS_REGION },
-      ]
-      secrets = [
-        { name = "SECRET", valueFrom = aws_ssm_parameter.secret.arn },
-        { name = "ENCRYPTION_SECRET", valueFrom = aws_ssm_parameter.encryption_secret.arn },
-        {
-          name      = "MONGO_URI"
-          valueFrom = aws_secretsmanager_secret_version.mongo_uri.arn
-        }
-      ]
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          "awslogs-group"         = "/ecs/${var.environment}/orchestrator"
+          "awslogs-group"         = "/ecs/${var.environment}/${each.key}"
           "awslogs-region"        = var.AWS_REGION
           "awslogs-stream-prefix" = "ecs"
         }
@@ -441,46 +289,12 @@ resource "aws_ecs_service" "api" {
   }
 }
 
-resource "aws_ecs_service" "queued-tasks-worker" {
-  name            = "${var.environment}-queued-tasks-worker"
+resource "aws_ecs_service" "worker" {
+  for_each = local.worker_roles
+
+  name            = "${var.environment}-${each.key}"
   cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.queued-tasks-worker.arn
-  desired_count   = 1
-  launch_type     = "FARGATE"
-  network_configuration {
-    subnets          = aws_subnet.private[*].id
-    security_groups  = [aws_security_group.ecs_tasks.id]
-    assign_public_ip = false
-  }
-  depends_on = [aws_lb_listener.https]
-
-  tags = {
-    Service = "api"
-  }
-}
-
-resource "aws_ecs_service" "instant-tasks-worker" {
-  name            = "${var.environment}-instant-tasks-worker"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.instant-tasks-worker.arn
-  desired_count   = 1
-  launch_type     = "FARGATE"
-  network_configuration {
-    subnets          = aws_subnet.private[*].id
-    security_groups  = [aws_security_group.ecs_tasks.id]
-    assign_public_ip = false
-  }
-  depends_on = [aws_lb_listener.https]
-
-  tags = {
-    Service = "api"
-  }
-}
-
-resource "aws_ecs_service" "orchestrator" {
-  name            = "${var.environment}-orchestrator"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.orchestrator.arn
+  task_definition = aws_ecs_task_definition.worker[each.key].arn
   desired_count   = 1
   launch_type     = "FARGATE"
   network_configuration {
@@ -583,9 +397,7 @@ resource "aws_service_discovery_service" "custom_code_runner" {
     }
     routing_policy = "MULTIVALUE"
   }
-  health_check_custom_config {
-    failure_threshold = 1
-  }
+  health_check_custom_config {}
 
   tags = {
     Service = "custom-code-runner"

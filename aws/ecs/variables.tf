@@ -8,11 +8,6 @@ variable "AWS_REGION" {
   type        = string
 }
 
-variable "aws_profile" {
-  description = "AWS profile name"
-  type        = string
-}
-
 variable "auth0_domain" {
   description = "Auth0 domain"
   type        = string
@@ -50,6 +45,12 @@ variable "hosted_zone" {
   description = "Hosted Zone"
   type        = string
   default     = "int-membrane.com"
+}
+
+variable "create_hosted_zone" {
+  description = "Create the Route53 hosted zone instead of using an existing one. When true, point your domain registrar at the zone's name servers (see hosted_zone_name_servers output) or certificate validation will fail."
+  type        = bool
+  default     = false
 }
 
 variable "openai_api_key" {

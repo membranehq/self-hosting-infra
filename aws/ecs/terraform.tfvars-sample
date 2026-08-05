@@ -1,6 +1,5 @@
 environment = "<your environment>"
 AWS_REGION = "<your aws region>"
-aws_profile = "<your aws profile>"
 
 # Auth0 Configuration
 auth0_domain = "<your auth0 domain>"
@@ -14,3 +13,12 @@ harbor_password = "<your harbor password>"
 # AI API keys
 openai_api_key = "<your openai api key>"
 anthropic_api_key = "<your anthropic api key>"
+
+# MongoDB
+mongo_uri = "<your mongodb connection string>"
+
+image_tag = "<your image tag>"
+
+# Optional overrides (defaults shown)
+# hosted_zone = "int-membrane.com"
+# create_hosted_zone = false

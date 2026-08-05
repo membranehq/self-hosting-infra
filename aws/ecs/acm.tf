@@ -1,6 +1,6 @@
 resource "aws_acm_certificate" "cloudfront" {
   provider          = aws.us-east-1
-  domain_name       = "static.int-membrane.com"
+  domain_name       = "static.${local.app_domain}"
   validation_method = "DNS"
 
   lifecycle {
@@ -19,11 +19,11 @@ resource "aws_acm_certificate_validation" "cloudfront" {
 }
 
 resource "aws_acm_certificate" "alb" {
-  domain_name = "int-membrane.com"
+  domain_name = local.app_domain
   subject_alternative_names = [
-    "api.int-membrane.com",
-    "ui.int-membrane.com",
-    "console.int-membrane.com"
+    "api.${local.app_domain}",
+    "ui.${local.app_domain}",
+    "console.${local.app_domain}"
   ]
   validation_method = "DNS"
 

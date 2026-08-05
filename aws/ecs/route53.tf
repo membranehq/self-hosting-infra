@@ -1,16 +1,28 @@
+data "aws_route53_zone" "main" {
+  count        = var.create_hosted_zone ? 0 : 1
+  name         = var.hosted_zone
+  private_zone = false
+}
+
 resource "aws_route53_zone" "main" {
-  name    = var.hosted_zone
-  comment = "HostedZone created by Route53 Registrar"
+  count = var.create_hosted_zone ? 1 : 0
+  name  = var.hosted_zone
 
   tags = {
     Service = "core"
   }
 }
 
+locals {
+  hosted_zone_id = var.create_hosted_zone ? aws_route53_zone.main[0].zone_id : data.aws_route53_zone.main[0].zone_id
+  app_domain     = "${var.environment}.${var.hosted_zone}"
+}
+
 resource "aws_route53_record" "static" {
-  zone_id = aws_route53_zone.main.zone_id
-  name    = "static.${aws_route53_zone.main.name}"
-  type    = "A"
+  zone_id         = local.hosted_zone_id
+  name            = "static.${local.app_domain}"
+  type            = "A"
+  allow_overwrite = true
 
   alias {
     name                   = aws_cloudfront_distribution.static.domain_name
@@ -29,7 +41,7 @@ resource "aws_route53_record" "cloudfront_cert_validation" {
   }
 
   allow_overwrite = true
-  zone_id         = aws_route53_zone.main.zone_id
+  zone_id         = local.hosted_zone_id
   name            = each.value.name
   type            = each.value.type
   records         = [each.value.record]
@@ -46,7 +58,7 @@ resource "aws_route53_record" "alb_cert_validation" {
   }
 
   allow_overwrite = true
-  zone_id         = aws_route53_zone.main.zone_id
+  zone_id         = local.hosted_zone_id
   name            = each.value.name
   type            = each.value.type
   records         = [each.value.record]
@@ -54,9 +66,10 @@ resource "aws_route53_record" "alb_cert_validation" {
 }
 
 resource "aws_route53_record" "api" {
-  zone_id = aws_route53_zone.main.zone_id
-  name    = "api.${aws_route53_zone.main.name}"
-  type    = "A"
+  zone_id         = local.hosted_zone_id
+  name            = "api.${local.app_domain}"
+  type            = "A"
+  allow_overwrite = true
   alias {
     name                   = aws_lb.public.dns_name
     zone_id                = aws_lb.public.zone_id
@@ -65,9 +78,10 @@ resource "aws_route53_record" "api" {
 }
 
 resource "aws_route53_record" "ui" {
-  zone_id = aws_route53_zone.main.zone_id
-  name    = "ui.${aws_route53_zone.main.name}"
-  type    = "A"
+  zone_id         = local.hosted_zone_id
+  name            = "ui.${local.app_domain}"
+  type            = "A"
+  allow_overwrite = true
   alias {
     name                   = aws_lb.public.dns_name
     zone_id                = aws_lb.public.zone_id
@@ -76,9 +90,10 @@ resource "aws_route53_record" "ui" {
 }
 
 resource "aws_route53_record" "console" {
-  zone_id = aws_route53_zone.main.zone_id
-  name    = "console.${aws_route53_zone.main.name}"
-  type    = "A"
+  zone_id         = local.hosted_zone_id
+  name            = "console.${local.app_domain}"
+  type            = "A"
+  allow_overwrite = true
   alias {
     name                   = aws_lb.public.dns_name
     zone_id                = aws_lb.public.zone_id

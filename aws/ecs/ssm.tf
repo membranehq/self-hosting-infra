@@ -20,6 +20,39 @@ resource "aws_ssm_parameter" "encryption_secret" {
   }
 }
 
+resource "aws_ssm_parameter" "openai_api_key" {
+  name        = "/${var.environment}/integration-app/openai-api-key"
+  description = "OpenAI API key"
+  type        = "SecureString"
+  value       = var.openai_api_key
+
+  tags = {
+    Service = "api"
+  }
+}
+
+resource "aws_ssm_parameter" "anthropic_api_key" {
+  name        = "/${var.environment}/integration-app/anthropic-api-key"
+  description = "Anthropic API key"
+  type        = "SecureString"
+  value       = var.anthropic_api_key
+
+  tags = {
+    Service = "api"
+  }
+}
+
+resource "aws_ssm_parameter" "auth0_client_secret" {
+  name        = "/${var.environment}/integration-app/auth0-client-secret"
+  description = "Auth0 client secret"
+  type        = "SecureString"
+  value       = var.auth0_client_secret
+
+  tags = {
+    Service = "api"
+  }
+}
+
 resource "random_password" "secret" {
   length  = 32
   special = false
@@ -31,7 +64,7 @@ resource "random_password" "encryption_secret" {
 }
 
 resource "aws_secretsmanager_secret" "harbor_pull" {
-  name        = "${var.environment}-harbor-pull-secret-new-2"
+  name        = "${var.environment}-harbor-pull-secret"
   description = "Harbor registry credentials for ECS image pulls"
 
   tags = {
@@ -49,7 +82,7 @@ resource "aws_secretsmanager_secret_version" "harbor_pull" {
 
 resource "aws_secretsmanager_secret" "mongo_uri" {
   name        = "${var.environment}-mongo_uri-secret"
-  description = "Harbor registry credentials for ECS image pulls"
+  description = "MongoDB connection string"
 
   tags = {
     Service = "core"
@@ -57,6 +90,6 @@ resource "aws_secretsmanager_secret" "mongo_uri" {
 }
 
 resource "aws_secretsmanager_secret_version" "mongo_uri" {
-  secret_id = aws_secretsmanager_secret.mongo_uri.id
+  secret_id     = aws_secretsmanager_secret.mongo_uri.id
   secret_string = var.mongo_uri
 }

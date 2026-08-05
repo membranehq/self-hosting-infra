@@ -1,3 +1,8 @@
+output "hosted_zone_name_servers" {
+  value       = var.create_hosted_zone ? aws_route53_zone.main[0].name_servers : null
+  description = "Name servers of the created hosted zone - point your domain registrar at these"
+}
+
 output "nat_gateway_public_ips" {
   value       = aws_eip.nat[*].public_ip
   description = "Public IP addresses of NAT Gateways - use these for MongoDB Atlas whitelist"

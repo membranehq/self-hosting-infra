@@ -10,7 +10,7 @@ resource "aws_cloudfront_distribution" "static" {
   enabled             = true
   default_root_object = "index.html"
 
-  aliases = ["static.${aws_route53_zone.main.name}"]
+  aliases = ["static.${local.app_domain}"]
 
   depends_on = [aws_acm_certificate_validation.cloudfront]
 
