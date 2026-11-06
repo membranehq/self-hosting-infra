@@ -31,20 +31,33 @@ variable "client_secret" {
   sensitive   = true
 }
 
-variable "auth0_domain" {
-  description = "Auth0 domain"
-  type        = string
-}
-
-variable "auth0_client_id" {
-  description = "Auth0 client ID"
-  type        = string
-}
-
-variable "auth0_client_secret" {
-  description = "Auth0 client secret"
+variable "instance_token" {
+  description = "Self-hosting instance token (sht_...), generated in Membrane console organization settings"
   type        = string
   sensitive   = true
+}
+
+variable "betterauth_email_provider" {
+  description = "BetterAuth email delivery: 'resend' (set resend_api_key and betterauth_email_from) or 'webhook' (configure webhooks in MongoDB)"
+  type        = string
+
+  validation {
+    condition     = contains(["resend", "webhook"], var.betterauth_email_provider)
+    error_message = "betterauth_email_provider must be 'resend' or 'webhook'."
+  }
+}
+
+variable "resend_api_key" {
+  description = "Resend API key, required when betterauth_email_provider is 'resend'"
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "betterauth_email_from" {
+  description = "Sender address for BetterAuth emails, required when betterauth_email_provider is 'resend'"
+  type        = string
+  default     = null
 }
 
 variable "mongo_uri" {

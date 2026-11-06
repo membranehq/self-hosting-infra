@@ -67,8 +67,9 @@ This approach complies with GCP's security requirements while maintaining compat
 5. **gcloud CLI** installed and authenticated
 6. **Domain name** for custom domains
 7. **MongoDB** database (MongoDB Atlas recommended)
-8. **Auth0** tenant configured
-9. **Harbor registry** credentials
+8. **Membrane instance token** (`sht_...`) from console organization settings
+9. **Email delivery** for BetterAuth: a Resend API key, or your own webhook endpoint
+10. **Harbor registry** credentials
 
 ## Getting Started
 
@@ -96,9 +97,10 @@ environment = "dev"
 
 domain_name = "your-domain.com"
 
-auth0_domain        = "your-tenant.auth0.com"
-auth0_client_id     = "your-client-id"
-auth0_client_secret = "your-client-secret"
+instance_token            = "sht_your-instance-token"
+betterauth_email_provider = "resend" # or "webhook"
+resend_api_key            = "your-resend-api-key"
+betterauth_email_from     = "noreply@your-domain.com"
 
 mongo_uri = "mongodb+srv://..."
 
@@ -232,8 +234,10 @@ For production:
 All secrets are stored in Secret Manager:
 - JWT secrets (auto-generated)
 - Encryption secrets (auto-generated)
+- BetterAuth secret (auto-generated)
+- Instance token
+- Resend API key (when `betterauth_email_provider = "resend"`)
 - MongoDB URI
-- Auth0 client secret
 - Harbor credentials
 
 ### IAM Permissions

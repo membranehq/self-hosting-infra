@@ -45,6 +45,22 @@ resource "azurerm_key_vault_secret" "encryption_secret" {
   depends_on = [azurerm_key_vault.main]
 }
 
+resource "azurerm_key_vault_secret" "auth_secret" {
+  name         = "auth-secret"
+  value        = random_password.auth_secret.result
+  key_vault_id = azurerm_key_vault.main.id
+
+  depends_on = [azurerm_key_vault.main]
+}
+
+resource "azurerm_key_vault_secret" "instance_token" {
+  name         = "instance-token"
+  value        = var.instance_token
+  key_vault_id = azurerm_key_vault.main.id
+
+  depends_on = [azurerm_key_vault.main]
+}
+
 resource "azurerm_key_vault_secret" "cosmosdb_connection" {
   name         = "cosmosdb-connection"
   value        = var.mongo_uri

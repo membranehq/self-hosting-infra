@@ -58,9 +58,7 @@ resource "aws_iam_role_policy" "ecs_task" {
           "s3:GetObject",
           "s3:PutObject",
           "s3:DeleteObject",
-          "s3:ListBucket",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "s3:ListBucket"
         ]
         Resource = [
           aws_s3_bucket.connectors.arn,
@@ -145,7 +143,7 @@ resource "aws_iam_role_policy" "ecs_execution_secret" {
         Action = [
           "secretsmanager:GetSecretValue"
         ]
-        Resource = "*"
+        Resource = aws_secretsmanager_secret.mongo_uri.arn
       }
     ]
   })

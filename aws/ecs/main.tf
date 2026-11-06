@@ -32,19 +32,3 @@ provider "aws" {
   }
 }
 
-provider "aws" {
-  alias   = "eu-central-1"
-  region  = "eu-central-1"
-  profile = var.aws_profile
-  default_tags {
-    tags = {
-      Environment = var.environment
-      Project     = var.project
-    }
-  }
-}
-
-provider "aws" {
-  alias  = "lb"
-  region = var.AWS_REGION
-}

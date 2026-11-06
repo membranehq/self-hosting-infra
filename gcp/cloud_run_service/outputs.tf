@@ -109,11 +109,12 @@ output "vpc_subnet" {
 output "secret_ids" {
   description = "Secret Manager secret IDs"
   value = {
-    jwt_secret          = google_secret_manager_secret.jwt_secret.secret_id
-    encryption_secret   = google_secret_manager_secret.encryption_secret.secret_id
-    mongo_uri           = google_secret_manager_secret.mongo_uri.secret_id
-    auth0_client_secret = google_secret_manager_secret.auth0_client_secret.secret_id
-    harbor_password     = google_secret_manager_secret.harbor_password.secret_id
+    jwt_secret        = google_secret_manager_secret.jwt_secret.secret_id
+    encryption_secret = google_secret_manager_secret.encryption_secret.secret_id
+    mongo_uri         = google_secret_manager_secret.mongo_uri.secret_id
+    auth_secret       = google_secret_manager_secret.auth_secret.secret_id
+    instance_token    = google_secret_manager_secret.instance_token.secret_id
+    harbor_password   = google_secret_manager_secret.harbor_password.secret_id
   }
 }
 
@@ -122,19 +123,19 @@ output "ssl_certificates" {
   description = "Managed SSL certificate names and status"
   value = {
     api = {
-      name   = google_compute_managed_ssl_certificate.api.name
+      name    = google_compute_managed_ssl_certificate.api.name
       domains = google_compute_managed_ssl_certificate.api.managed[0].domains
     }
     ui = {
-      name   = google_compute_managed_ssl_certificate.ui.name
+      name    = google_compute_managed_ssl_certificate.ui.name
       domains = google_compute_managed_ssl_certificate.ui.managed[0].domains
     }
     console = {
-      name   = google_compute_managed_ssl_certificate.console.name
+      name    = google_compute_managed_ssl_certificate.console.name
       domains = google_compute_managed_ssl_certificate.console.managed[0].domains
     }
     static = {
-      name   = google_compute_managed_ssl_certificate.static.name
+      name    = google_compute_managed_ssl_certificate.static.name
       domains = google_compute_managed_ssl_certificate.static.managed[0].domains
     }
   }
@@ -143,7 +144,7 @@ output "ssl_certificates" {
 # Instructions
 output "deployment_instructions" {
   description = "Next steps after deployment"
-  value = <<-EOT
+  value       = <<-EOT
 
   Deployment Complete!
 

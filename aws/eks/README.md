@@ -285,19 +285,28 @@ config:
   CONSOLE_URI: https://console.development.<your-domain>
 
   # S3 Buckets
-  CONNECTORS_S3_BUCKET: <connectors-bucket-name>
-  TMP_S3_BUCKET: <tmp-bucket-name>
-  STATIC_S3_BUCKET: <static-bucket-name>
+  CONNECTORS_STORAGE_BUCKET: <connectors-bucket-name>
+  TMP_STORAGE_BUCKET: <tmp-bucket-name>
+  STATIC_STORAGE_BUCKET: <static-bucket-name>
   BASE_STATIC_URI: <static-uri>
 
-  # Auth0 Settings
-  AUTH0_DOMAIN: <your-auth0-domain>
-  AUTH0_CLIENT_ID: <your-auth0-client-id>
-  AUTH0_CLIENT_SECRET: <your-auth0-client-secret>
+  # BetterAuth (API)
+  AUTH_PROVIDER: betterauth
+  CONSOLE_BASE_URI: https://console.development.<your-domain>
+  BETTERAUTH_EMAIL_PROVIDER: resend # or "webhook" (see Membrane self-hosting docs)
+  RESEND_API_KEY: <your-resend-api-key>
+  BETTERAUTH_EMAIL_FROM: <sender-email-address>
+
+  # BetterAuth (Console)
+  NEXT_PUBLIC_AUTH_PROVIDER: betterauth
+
+  # Membrane self-hosting token (console > organization settings > self-hosting tokens)
+  INSTANCE_TOKEN: <your-instance-token>
 
   # Secrets - generate random strings for these
   SECRET: <your-jwt-secret>
   ENCRYPTION_SECRET: <your-encryption-secret>
+  AUTH_SECRET: <your-betterauth-secret>
 
   # Cloud flag
   NEXT_PUBLIC_IS_CLOUD: "false"
