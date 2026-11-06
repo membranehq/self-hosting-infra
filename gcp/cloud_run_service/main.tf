@@ -19,6 +19,7 @@ provider "google" {
 
 # Tags that will be applied to all resources
 locals {
+  uses_resend = var.betterauth_email_provider == "resend"
   common_labels = {
     environment = var.environment
     project     = var.project
@@ -46,6 +47,11 @@ locals {
 
 # Random passwords for secrets
 resource "random_password" "secret" {
+  length  = 32
+  special = false
+}
+
+resource "random_password" "auth_secret" {
   length  = 32
   special = false
 }

@@ -8,12 +8,12 @@ locals {
     { name = "BASE_WEBHOOKS_URI", value = "https://${aws_route53_record.api.name}" },
     { name = "BASE_OAUTH_CALLBACK_URI", value = "https://${aws_route53_record.api.name}" },
     { name = "CUSTOM_CODE_RUNNER_URI", value = "http://custom-code-runner.${var.environment}.local:5000" },
-    { name = "AUTH0_DOMAIN", value = var.auth0_domain },
-    { name = "AUTH0_CLIENT_ID", value = var.auth0_client_id },
-    { name = "COPILOT_S3_BUCKET", value = aws_s3_bucket.tmp.id },
-    { name = "TMP_S3_BUCKET", value = aws_s3_bucket.tmp.id },
-    { name = "CONNECTORS_S3_BUCKET", value = aws_s3_bucket.connectors.id },
-    { name = "STATIC_S3_BUCKET", value = aws_s3_bucket.static.id },
+    { name = "CONSOLE_BASE_URI", value = "https://${aws_route53_record.console.name}" },
+    { name = "AUTH_PROVIDER", value = "betterauth" },
+    { name = "BETTERAUTH_EMAIL_PROVIDER", value = var.betterauth_email_provider },
+    { name = "TMP_STORAGE_BUCKET", value = aws_s3_bucket.tmp.id },
+    { name = "CONNECTORS_STORAGE_BUCKET", value = aws_s3_bucket.connectors.id },
+    { name = "STATIC_STORAGE_BUCKET", value = aws_s3_bucket.static.id },
     { name = "BASE_STATIC_URI", value = "https://${aws_route53_record.static.name}" },
     { name = "REDIS_CLUSTER_URI_1", value = local.redis_configuration_endpoint },
     { name = "PORT", value = "5000" },
@@ -21,12 +21,23 @@ locals {
     { name = "AWS_REGION", value = var.AWS_REGION },
   ]
 
+  uses_resend = var.betterauth_email_provider == "resend"
+
+  betterauth_email_environment = local.uses_resend ? [
+    { name = "BETTERAUTH_EMAIL_FROM", value = var.betterauth_email_from },
+  ] : []
+
+  betterauth_email_secrets = local.uses_resend ? [
+    { name = "RESEND_API_KEY", valueFrom = aws_ssm_parameter.resend_api_key[0].arn },
+  ] : []
+
   api_secrets = [
     { name = "SECRET", valueFrom = aws_ssm_parameter.secret.arn },
     { name = "ENCRYPTION_SECRET", valueFrom = aws_ssm_parameter.encryption_secret.arn },
     { name = "OPENAI_API_KEY", valueFrom = aws_ssm_parameter.openai_api_key.arn },
     { name = "ANTHROPIC_API_KEY", valueFrom = aws_ssm_parameter.anthropic_api_key.arn },
-    { name = "AUTH0_CLIENT_SECRET", valueFrom = aws_ssm_parameter.auth0_client_secret.arn },
+    { name = "AUTH_SECRET", valueFrom = aws_ssm_parameter.auth_secret.arn },
+    { name = "INSTANCE_TOKEN", valueFrom = aws_ssm_parameter.instance_token.arn },
     { name = "MONGO_URI", valueFrom = aws_secretsmanager_secret.mongo_uri.arn },
   ]
 
@@ -71,8 +82,10 @@ resource "aws_ecs_task_definition" "api" {
           hostPort      = 5000
         }
       ]
-      environment = local.api_environment
-      secrets     = local.api_secrets
+      environment = concat([
+        { name = "IS_API", value = "1" },
+      ], local.api_environment, local.betterauth_email_environment)
+      secrets = concat(local.api_secrets, local.betterauth_email_secrets)
       logConfiguration = {
         logDriver = "awslogs"
         options = {
@@ -111,8 +124,8 @@ resource "aws_ecs_task_definition" "worker" {
       environment = concat([
         { name = each.value, value = "1" },
         { name = "NODE_OPTIONS", value = "--max-old-space-size=4500" },
-      ], local.api_environment)
-      secrets = local.api_secrets
+      ], local.api_environment, local.betterauth_email_environment)
+      secrets = concat(local.api_secrets, local.betterauth_email_secrets)
       logConfiguration = {
         logDriver = "awslogs"
         options = {
@@ -191,10 +204,9 @@ resource "aws_ecs_task_definition" "console" {
       environment = [
         { name = "NODE_VERSION", value = "20.18.1" },
         { name = "NEXT_PUBLIC_BASE_URI", value = "https://${aws_route53_record.console.name}" },
-        { name = "NEXT_PUBLIC_AUTH0_DOMAIN", value = var.auth0_domain },
+        { name = "NEXT_PUBLIC_AUTH_PROVIDER", value = "betterauth" },
         { name = "NEXT_PUBLIC_ENGINE_API_URI", value = "https://${aws_route53_record.api.name}" },
         { name = "NEXT_PUBLIC_ENGINE_UI_URI", value = "https://${aws_route53_record.ui.name}" },
-        { name = "NEXT_PUBLIC_AUTH0_CLIENT_ID", value = var.auth0_client_id },
         { name = "PORT", value = "5000" }
       ]
       portMappings = [

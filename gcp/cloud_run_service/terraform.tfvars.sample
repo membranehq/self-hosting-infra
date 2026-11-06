@@ -7,10 +7,13 @@ project     = "membrane"
 # Domain Configuration
 domain_name = "gcp.int-membrane.com"
 
-# Auth0 Configuration
-auth0_domain        = "your-tenant.auth0.com"
-auth0_client_id     = "your-auth0-client-id"
-auth0_client_secret = "your-auth0-client-secret"
+# Membrane self-hosting token (console > organization settings > self-hosting tokens)
+instance_token = "sht_your-instance-token"
+
+# BetterAuth email delivery: "resend" or "webhook"
+betterauth_email_provider = "resend"
+resend_api_key            = "your-resend-api-key"
+betterauth_email_from     = "noreply@yourdomain.com"
 
 # MongoDB Configuration
 mongo_uri = "mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority"

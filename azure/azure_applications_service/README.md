@@ -41,7 +41,8 @@ This Terraform module deploys the Integration.app application stack on Azure, pr
 - Terraform >= 1.11.3
 - Azure CLI installed and authenticated
 - Harbor registry access credentials
-- Auth0 application credentials
+- Membrane instance token (`sht_...`) from console organization settings
+- Email delivery for BetterAuth: a Resend API key, or your own webhook endpoint
 - Service Principal with Owner permissions (see Service Principal Setup below)
 
 ## Service Principal Setup
@@ -94,9 +95,10 @@ The Owner role is necessary because the Terraform configuration creates role ass
    tenant_id          = "your-tenant-id"
    client_id          = "your-service-principal-client-id"
    client_secret      = "your-service-principal-client-secret"
-   auth0_domain       = "your-domain.auth0.com"
-   auth0_client_id    = "your-auth0-client-id"
-   auth0_client_secret = "your-auth0-client-secret"
+   instance_token     = "sht_your-instance-token"
+   betterauth_email_provider = "resend" # or "webhook"
+   resend_api_key     = "your-resend-api-key"
+   betterauth_email_from = "noreply@yourdomain.com"
    harbor_username    = "your-harbor-username"
    harbor_password    = "your-harbor-password"
    ```
@@ -153,11 +155,14 @@ The Container Apps are configured with the following environment variables:
 
 - `NODE_ENV=production`
 - `BASE_URI=https://api.azure.int-membrane.com`
-- `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`
+- `AUTH_PROVIDER=betterauth`, `AUTH_SECRET` (auto-generated)
+- `CONSOLE_BASE_URI=https://console.azure.int-membrane.com`
+- `BETTERAUTH_EMAIL_PROVIDER`, plus `RESEND_API_KEY` and `BETTERAUTH_EMAIL_FROM` for Resend
+- `INSTANCE_TOKEN`
 - `MONGO_URI` (from Key Vault)
 - `REDIS_URI` (Redis connection with SSL)
 - `AZURE_STORAGE_CONNECTION_STRING`
-- Storage container names for tmp, connectors, and static files
+- Storage container names for tmp, connectors, and static files (`TMP_STORAGE_BUCKET`, `CONNECTORS_STORAGE_BUCKET`, `STATIC_STORAGE_BUCKET`)
 
 ### UI Service
 
@@ -167,10 +172,9 @@ The Container Apps are configured with the following environment variables:
 ### Console Service
 
 - `NEXT_PUBLIC_BASE_URI=https://console.azure.int-membrane.com`
-- `NEXT_PUBLIC_AUTH0_DOMAIN`
+- `NEXT_PUBLIC_AUTH_PROVIDER=betterauth`
 - `NEXT_PUBLIC_ENGINE_API_URI=https://api.azure.int-membrane.com`
 - `NEXT_PUBLIC_ENGINE_UI_URI=https://ui.azure.int-membrane.com`
-- `NEXT_PUBLIC_AUTH0_CLIENT_ID`
 
 ## Outputs
 

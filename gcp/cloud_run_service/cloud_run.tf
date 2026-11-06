@@ -1,8 +1,8 @@
 # API Service
 resource "google_cloud_run_v2_service" "api" {
-  name               = "${local.service_name_prefix}-api"
-  location           = var.region
-  ingress            = "INGRESS_TRAFFIC_ALL"
+  name                = "${local.service_name_prefix}-api"
+  location            = var.region
+  ingress             = "INGRESS_TRAFFIC_ALL"
   deletion_protection = false
 
   template {
@@ -66,32 +66,64 @@ resource "google_cloud_run_v2_service" "api" {
         value = google_cloud_run_v2_service.custom_code_runner.uri
       }
       env {
-        name  = "AUTH0_DOMAIN"
-        value = var.auth0_domain
+        name  = "CONSOLE_BASE_URI"
+        value = "https://${local.console_hostname}"
       }
       env {
-        name  = "AUTH0_CLIENT_ID"
-        value = var.auth0_client_id
+        name  = "AUTH_PROVIDER"
+        value = "betterauth"
       }
       env {
-        name = "AUTH0_CLIENT_SECRET"
+        name  = "BETTERAUTH_EMAIL_PROVIDER"
+        value = var.betterauth_email_provider
+      }
+      dynamic "env" {
+        for_each = local.uses_resend ? [1] : []
+        content {
+          name  = "BETTERAUTH_EMAIL_FROM"
+          value = var.betterauth_email_from
+        }
+      }
+      env {
+        name = "AUTH_SECRET"
         value_source {
           secret_key_ref {
-            secret  = google_secret_manager_secret.auth0_client_secret.secret_id
+            secret  = google_secret_manager_secret.auth_secret.secret_id
             version = "latest"
           }
         }
       }
       env {
-        name  = "TMP_S3_BUCKET"
+        name = "INSTANCE_TOKEN"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.instance_token.secret_id
+            version = "latest"
+          }
+        }
+      }
+      dynamic "env" {
+        for_each = local.uses_resend ? [1] : []
+        content {
+          name = "RESEND_API_KEY"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.resend_api_key[0].secret_id
+              version = "latest"
+            }
+          }
+        }
+      }
+      env {
+        name  = "TMP_STORAGE_BUCKET"
         value = google_storage_bucket.tmp.name
       }
       env {
-        name  = "CONNECTORS_S3_BUCKET"
+        name  = "CONNECTORS_STORAGE_BUCKET"
         value = google_storage_bucket.connectors.name
       }
       env {
-        name  = "STATIC_S3_BUCKET"
+        name  = "STATIC_STORAGE_BUCKET"
         value = google_storage_bucket.static.name
       }
       env {
@@ -157,9 +189,9 @@ resource "google_cloud_run_v2_service_iam_member" "api_public" {
 
 # UI Service
 resource "google_cloud_run_v2_service" "ui" {
-  name               = "${local.service_name_prefix}-ui"
-  location           = var.region
-  ingress            = "INGRESS_TRAFFIC_ALL"
+  name                = "${local.service_name_prefix}-ui"
+  location            = var.region
+  ingress             = "INGRESS_TRAFFIC_ALL"
   deletion_protection = false
 
   template {
@@ -213,9 +245,9 @@ resource "google_cloud_run_v2_service_iam_member" "ui_public" {
 
 # Console Service
 resource "google_cloud_run_v2_service" "console" {
-  name               = "${local.service_name_prefix}-console"
-  location           = var.region
-  ingress            = "INGRESS_TRAFFIC_ALL"
+  name                = "${local.service_name_prefix}-console"
+  location            = var.region
+  ingress             = "INGRESS_TRAFFIC_ALL"
   deletion_protection = false
 
   template {
@@ -259,8 +291,8 @@ resource "google_cloud_run_v2_service" "console" {
         value = "https://${local.console_hostname}"
       }
       env {
-        name  = "NEXT_PUBLIC_AUTH0_DOMAIN"
-        value = var.auth0_domain
+        name  = "NEXT_PUBLIC_AUTH_PROVIDER"
+        value = "betterauth"
       }
       env {
         name  = "NEXT_PUBLIC_ENGINE_API_URI"
@@ -269,10 +301,6 @@ resource "google_cloud_run_v2_service" "console" {
       env {
         name  = "NEXT_PUBLIC_ENGINE_UI_URI"
         value = "https://${local.ui_hostname}"
-      }
-      env {
-        name  = "NEXT_PUBLIC_AUTH0_CLIENT_ID"
-        value = var.auth0_client_id
       }
     }
   }
@@ -289,9 +317,9 @@ resource "google_cloud_run_v2_service_iam_member" "console_public" {
 
 # Custom Code Runner Service
 resource "google_cloud_run_v2_service" "custom_code_runner" {
-  name               = "${local.service_name_prefix}-runner"
-  location           = var.region
-  ingress            = "INGRESS_TRAFFIC_INTERNAL_ONLY"
+  name                = "${local.service_name_prefix}-runner"
+  location            = var.region
+  ingress             = "INGRESS_TRAFFIC_INTERNAL_ONLY"
   deletion_protection = false
 
   template {
@@ -364,9 +392,9 @@ resource "google_cloud_run_v2_service_iam_member" "runner_queued_worker_invoker"
 
 # Instant Tasks Worker Service
 resource "google_cloud_run_v2_service" "instant_tasks_worker" {
-  name               = "${local.service_name_prefix}-instantworker"
-  location           = var.region
-  ingress            = "INGRESS_TRAFFIC_INTERNAL_ONLY"
+  name                = "${local.service_name_prefix}-instantworker"
+  location            = var.region
+  ingress             = "INGRESS_TRAFFIC_INTERNAL_ONLY"
   deletion_protection = false
 
   template {
@@ -434,32 +462,64 @@ resource "google_cloud_run_v2_service" "instant_tasks_worker" {
         value = google_cloud_run_v2_service.custom_code_runner.uri
       }
       env {
-        name  = "AUTH0_DOMAIN"
-        value = var.auth0_domain
+        name  = "CONSOLE_BASE_URI"
+        value = "https://${local.console_hostname}"
       }
       env {
-        name  = "AUTH0_CLIENT_ID"
-        value = var.auth0_client_id
+        name  = "AUTH_PROVIDER"
+        value = "betterauth"
       }
       env {
-        name = "AUTH0_CLIENT_SECRET"
+        name  = "BETTERAUTH_EMAIL_PROVIDER"
+        value = var.betterauth_email_provider
+      }
+      dynamic "env" {
+        for_each = local.uses_resend ? [1] : []
+        content {
+          name  = "BETTERAUTH_EMAIL_FROM"
+          value = var.betterauth_email_from
+        }
+      }
+      env {
+        name = "AUTH_SECRET"
         value_source {
           secret_key_ref {
-            secret  = google_secret_manager_secret.auth0_client_secret.secret_id
+            secret  = google_secret_manager_secret.auth_secret.secret_id
             version = "latest"
           }
         }
       }
       env {
-        name  = "TMP_S3_BUCKET"
+        name = "INSTANCE_TOKEN"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.instance_token.secret_id
+            version = "latest"
+          }
+        }
+      }
+      dynamic "env" {
+        for_each = local.uses_resend ? [1] : []
+        content {
+          name = "RESEND_API_KEY"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.resend_api_key[0].secret_id
+              version = "latest"
+            }
+          }
+        }
+      }
+      env {
+        name  = "TMP_STORAGE_BUCKET"
         value = google_storage_bucket.tmp.name
       }
       env {
-        name  = "CONNECTORS_S3_BUCKET"
+        name  = "CONNECTORS_STORAGE_BUCKET"
         value = google_storage_bucket.connectors.name
       }
       env {
-        name  = "STATIC_S3_BUCKET"
+        name  = "STATIC_STORAGE_BUCKET"
         value = google_storage_bucket.static.name
       }
       env {
@@ -517,9 +577,9 @@ resource "google_cloud_run_v2_service" "instant_tasks_worker" {
 
 # Queued Tasks Worker Service
 resource "google_cloud_run_v2_service" "queued_tasks_worker" {
-  name               = "${local.service_name_prefix}-queuedworker"
-  location           = var.region
-  ingress            = "INGRESS_TRAFFIC_INTERNAL_ONLY"
+  name                = "${local.service_name_prefix}-queuedworker"
+  location            = var.region
+  ingress             = "INGRESS_TRAFFIC_INTERNAL_ONLY"
   deletion_protection = false
 
   template {
@@ -587,32 +647,64 @@ resource "google_cloud_run_v2_service" "queued_tasks_worker" {
         value = google_cloud_run_v2_service.custom_code_runner.uri
       }
       env {
-        name  = "AUTH0_DOMAIN"
-        value = var.auth0_domain
+        name  = "CONSOLE_BASE_URI"
+        value = "https://${local.console_hostname}"
       }
       env {
-        name  = "AUTH0_CLIENT_ID"
-        value = var.auth0_client_id
+        name  = "AUTH_PROVIDER"
+        value = "betterauth"
       }
       env {
-        name = "AUTH0_CLIENT_SECRET"
+        name  = "BETTERAUTH_EMAIL_PROVIDER"
+        value = var.betterauth_email_provider
+      }
+      dynamic "env" {
+        for_each = local.uses_resend ? [1] : []
+        content {
+          name  = "BETTERAUTH_EMAIL_FROM"
+          value = var.betterauth_email_from
+        }
+      }
+      env {
+        name = "AUTH_SECRET"
         value_source {
           secret_key_ref {
-            secret  = google_secret_manager_secret.auth0_client_secret.secret_id
+            secret  = google_secret_manager_secret.auth_secret.secret_id
             version = "latest"
           }
         }
       }
       env {
-        name  = "TMP_S3_BUCKET"
+        name = "INSTANCE_TOKEN"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.instance_token.secret_id
+            version = "latest"
+          }
+        }
+      }
+      dynamic "env" {
+        for_each = local.uses_resend ? [1] : []
+        content {
+          name = "RESEND_API_KEY"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.resend_api_key[0].secret_id
+              version = "latest"
+            }
+          }
+        }
+      }
+      env {
+        name  = "TMP_STORAGE_BUCKET"
         value = google_storage_bucket.tmp.name
       }
       env {
-        name  = "CONNECTORS_S3_BUCKET"
+        name  = "CONNECTORS_STORAGE_BUCKET"
         value = google_storage_bucket.connectors.name
       }
       env {
-        name  = "STATIC_S3_BUCKET"
+        name  = "STATIC_STORAGE_BUCKET"
         value = google_storage_bucket.static.name
       }
       env {
@@ -678,9 +770,9 @@ resource "google_cloud_run_v2_service" "queued_tasks_worker" {
 
 # Orchestrator Service
 resource "google_cloud_run_v2_service" "orchestrator" {
-  name               = "${local.service_name_prefix}-orchestrator"
-  location           = var.region
-  ingress            = "INGRESS_TRAFFIC_INTERNAL_ONLY"
+  name                = "${local.service_name_prefix}-orchestrator"
+  location            = var.region
+  ingress             = "INGRESS_TRAFFIC_INTERNAL_ONLY"
   deletion_protection = false
 
   template {
@@ -748,32 +840,64 @@ resource "google_cloud_run_v2_service" "orchestrator" {
         value = google_cloud_run_v2_service.custom_code_runner.uri
       }
       env {
-        name  = "AUTH0_DOMAIN"
-        value = var.auth0_domain
+        name  = "CONSOLE_BASE_URI"
+        value = "https://${local.console_hostname}"
       }
       env {
-        name  = "AUTH0_CLIENT_ID"
-        value = var.auth0_client_id
+        name  = "AUTH_PROVIDER"
+        value = "betterauth"
       }
       env {
-        name = "AUTH0_CLIENT_SECRET"
+        name  = "BETTERAUTH_EMAIL_PROVIDER"
+        value = var.betterauth_email_provider
+      }
+      dynamic "env" {
+        for_each = local.uses_resend ? [1] : []
+        content {
+          name  = "BETTERAUTH_EMAIL_FROM"
+          value = var.betterauth_email_from
+        }
+      }
+      env {
+        name = "AUTH_SECRET"
         value_source {
           secret_key_ref {
-            secret  = google_secret_manager_secret.auth0_client_secret.secret_id
+            secret  = google_secret_manager_secret.auth_secret.secret_id
             version = "latest"
           }
         }
       }
       env {
-        name  = "TMP_S3_BUCKET"
+        name = "INSTANCE_TOKEN"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.instance_token.secret_id
+            version = "latest"
+          }
+        }
+      }
+      dynamic "env" {
+        for_each = local.uses_resend ? [1] : []
+        content {
+          name = "RESEND_API_KEY"
+          value_source {
+            secret_key_ref {
+              secret  = google_secret_manager_secret.resend_api_key[0].secret_id
+              version = "latest"
+            }
+          }
+        }
+      }
+      env {
+        name  = "TMP_STORAGE_BUCKET"
         value = google_storage_bucket.tmp.name
       }
       env {
-        name  = "CONNECTORS_S3_BUCKET"
+        name  = "CONNECTORS_STORAGE_BUCKET"
         value = google_storage_bucket.connectors.name
       }
       env {
-        name  = "STATIC_S3_BUCKET"
+        name  = "STATIC_STORAGE_BUCKET"
         value = google_storage_bucket.static.name
       }
       env {

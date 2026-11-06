@@ -46,9 +46,9 @@ resource "google_secret_manager_secret_version" "mongo_uri" {
   secret_data = var.mongo_uri
 }
 
-# Secret Manager - Auth0 Client Secret
-resource "google_secret_manager_secret" "auth0_client_secret" {
-  secret_id = "${local.service_name_prefix}-auth0-client-secret"
+# Secret Manager - BetterAuth Secret
+resource "google_secret_manager_secret" "auth_secret" {
+  secret_id = "${local.service_name_prefix}-auth-secret"
 
   replication {
     auto {}
@@ -57,9 +57,43 @@ resource "google_secret_manager_secret" "auth0_client_secret" {
   labels = local.common_labels
 }
 
-resource "google_secret_manager_secret_version" "auth0_client_secret" {
-  secret      = google_secret_manager_secret.auth0_client_secret.id
-  secret_data = var.auth0_client_secret
+resource "google_secret_manager_secret_version" "auth_secret" {
+  secret      = google_secret_manager_secret.auth_secret.id
+  secret_data = random_password.auth_secret.result
+}
+
+# Secret Manager - Instance Token
+resource "google_secret_manager_secret" "instance_token" {
+  secret_id = "${local.service_name_prefix}-instance-token"
+
+  replication {
+    auto {}
+  }
+
+  labels = local.common_labels
+}
+
+resource "google_secret_manager_secret_version" "instance_token" {
+  secret      = google_secret_manager_secret.instance_token.id
+  secret_data = var.instance_token
+}
+
+# Secret Manager - Resend API Key
+resource "google_secret_manager_secret" "resend_api_key" {
+  count     = local.uses_resend ? 1 : 0
+  secret_id = "${local.service_name_prefix}-resend-api-key"
+
+  replication {
+    auto {}
+  }
+
+  labels = local.common_labels
+}
+
+resource "google_secret_manager_secret_version" "resend_api_key" {
+  count       = local.uses_resend ? 1 : 0
+  secret      = google_secret_manager_secret.resend_api_key[0].id
+  secret_data = var.resend_api_key
 }
 
 # Secret Manager - Harbor Password
@@ -109,8 +143,21 @@ resource "google_secret_manager_secret_iam_member" "api_mongo_uri" {
   member    = "serviceAccount:${google_service_account.api.email}"
 }
 
-resource "google_secret_manager_secret_iam_member" "api_auth0_client_secret" {
-  secret_id = google_secret_manager_secret.auth0_client_secret.id
+resource "google_secret_manager_secret_iam_member" "api_auth_secret" {
+  secret_id = google_secret_manager_secret.auth_secret.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.api.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "api_instance_token" {
+  secret_id = google_secret_manager_secret.instance_token.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.api.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "api_resend_api_key" {
+  count     = local.uses_resend ? 1 : 0
+  secret_id = google_secret_manager_secret.resend_api_key[0].id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.api.email}"
 }
@@ -134,8 +181,21 @@ resource "google_secret_manager_secret_iam_member" "instant_worker_mongo_uri" {
   member    = "serviceAccount:${google_service_account.instant_tasks_worker.email}"
 }
 
-resource "google_secret_manager_secret_iam_member" "instant_worker_auth0_client_secret" {
-  secret_id = google_secret_manager_secret.auth0_client_secret.id
+resource "google_secret_manager_secret_iam_member" "instant_worker_auth_secret" {
+  secret_id = google_secret_manager_secret.auth_secret.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.instant_tasks_worker.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "instant_worker_instance_token" {
+  secret_id = google_secret_manager_secret.instance_token.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.instant_tasks_worker.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "instant_worker_resend_api_key" {
+  count     = local.uses_resend ? 1 : 0
+  secret_id = google_secret_manager_secret.resend_api_key[0].id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.instant_tasks_worker.email}"
 }
@@ -159,8 +219,21 @@ resource "google_secret_manager_secret_iam_member" "queued_worker_mongo_uri" {
   member    = "serviceAccount:${google_service_account.queued_tasks_worker.email}"
 }
 
-resource "google_secret_manager_secret_iam_member" "queued_worker_auth0_client_secret" {
-  secret_id = google_secret_manager_secret.auth0_client_secret.id
+resource "google_secret_manager_secret_iam_member" "queued_worker_auth_secret" {
+  secret_id = google_secret_manager_secret.auth_secret.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.queued_tasks_worker.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "queued_worker_instance_token" {
+  secret_id = google_secret_manager_secret.instance_token.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.queued_tasks_worker.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "queued_worker_resend_api_key" {
+  count     = local.uses_resend ? 1 : 0
+  secret_id = google_secret_manager_secret.resend_api_key[0].id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.queued_tasks_worker.email}"
 }
@@ -184,8 +257,21 @@ resource "google_secret_manager_secret_iam_member" "orchestrator_mongo_uri" {
   member    = "serviceAccount:${google_service_account.orchestrator.email}"
 }
 
-resource "google_secret_manager_secret_iam_member" "orchestrator_auth0_client_secret" {
-  secret_id = google_secret_manager_secret.auth0_client_secret.id
+resource "google_secret_manager_secret_iam_member" "orchestrator_auth_secret" {
+  secret_id = google_secret_manager_secret.auth_secret.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.orchestrator.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "orchestrator_instance_token" {
+  secret_id = google_secret_manager_secret.instance_token.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.orchestrator.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "orchestrator_resend_api_key" {
+  count     = local.uses_resend ? 1 : 0
+  secret_id = google_secret_manager_secret.resend_api_key[0].id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.orchestrator.email}"
 }

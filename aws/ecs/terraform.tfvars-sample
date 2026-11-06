@@ -1,10 +1,13 @@
 environment = "<your environment>"
 AWS_REGION = "<your aws region>"
 
-# Auth0 Configuration
-auth0_domain = "<your auth0 domain>"
-auth0_client_id = "<your auth0 client id>"
-auth0_client_secret = "<your auth0 client secret>"
+# Membrane self-hosting token (console > organization settings > self-hosting tokens)
+instance_token = "<your instance token>"
+
+# BetterAuth email delivery: "resend" or "webhook"
+betterauth_email_provider = "resend"
+resend_api_key = "<your resend api key>"
+betterauth_email_from = "<sender email address>"
 
 # Harbor Credentials
 harbor_username = "<your harbor username>"

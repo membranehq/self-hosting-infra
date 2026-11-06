@@ -42,11 +42,35 @@ resource "aws_ssm_parameter" "anthropic_api_key" {
   }
 }
 
-resource "aws_ssm_parameter" "auth0_client_secret" {
-  name        = "/${var.environment}/integration-app/auth0-client-secret"
-  description = "Auth0 client secret"
+resource "aws_ssm_parameter" "auth_secret" {
+  name        = "/${var.environment}/integration-app/auth-secret"
+  description = "BetterAuth session signing secret"
   type        = "SecureString"
-  value       = var.auth0_client_secret
+  value       = random_password.auth_secret.result
+
+  tags = {
+    Service = "api"
+  }
+}
+
+resource "aws_ssm_parameter" "instance_token" {
+  name        = "/${var.environment}/integration-app/instance-token"
+  description = "Membrane self-hosting instance token"
+  type        = "SecureString"
+  value       = var.instance_token
+
+  tags = {
+    Service = "api"
+  }
+}
+
+resource "aws_ssm_parameter" "resend_api_key" {
+  count = local.uses_resend ? 1 : 0
+
+  name        = "/${var.environment}/integration-app/resend-api-key"
+  description = "Resend API key for BetterAuth emails"
+  type        = "SecureString"
+  value       = var.resend_api_key
 
   tags = {
     Service = "api"
@@ -59,6 +83,11 @@ resource "random_password" "secret" {
 }
 
 resource "random_password" "encryption_secret" {
+  length  = 32
+  special = false
+}
+
+resource "random_password" "auth_secret" {
   length  = 32
   special = false
 }

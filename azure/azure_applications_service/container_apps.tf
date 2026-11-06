@@ -1,3 +1,7 @@
+locals {
+  uses_resend = var.betterauth_email_provider == "resend"
+}
+
 # Container Apps Environment
 resource "azurerm_container_app_environment" "main" {
   name                       = "${var.environment}-${var.project}-environment-cae"
@@ -48,6 +52,24 @@ resource "azurerm_container_app" "api" {
     value = var.mongo_uri
   }
 
+  secret {
+    name  = "auth-secret"
+    value = random_password.auth_secret.result
+  }
+
+  secret {
+    name  = "instance-token"
+    value = var.instance_token
+  }
+
+  dynamic "secret" {
+    for_each = local.uses_resend ? [1] : []
+    content {
+      name  = "resend-api-key"
+      value = var.resend_api_key
+    }
+  }
+
   template {
     container {
       name   = "api"
@@ -72,27 +94,34 @@ resource "azurerm_container_app" "api" {
         value = "https://${azurerm_container_app.custom_code_runner.latest_revision_fqdn}"
       }
       env {
-        name  = "AUTH0_DOMAIN"
-        value = var.auth0_domain
+        name  = "CONSOLE_BASE_URI"
+        value = "https://${local.console_hostname}"
       }
       env {
-        name  = "AUTH0_CLIENT_ID"
-        value = var.auth0_client_id
+        name  = "AUTH_PROVIDER"
+        value = "betterauth"
       }
       env {
-        name  = "AUTH0_CLIENT_SECRET"
-        value = var.auth0_client_secret
+        name  = "BETTERAUTH_EMAIL_PROVIDER"
+        value = var.betterauth_email_provider
+      }
+      dynamic "env" {
+        for_each = local.uses_resend ? [1] : []
+        content {
+          name  = "BETTERAUTH_EMAIL_FROM"
+          value = var.betterauth_email_from
+        }
       }
       env {
-        name  = "TMP_S3_BUCKET"
+        name  = "TMP_STORAGE_BUCKET"
         value = azurerm_storage_container.tmp.name
       }
       env {
-        name  = "CONNECTORS_S3_BUCKET"
+        name  = "CONNECTORS_STORAGE_BUCKET"
         value = azurerm_storage_container.connectors.name
       }
       env {
-        name  = "STATIC_S3_BUCKET"
+        name  = "STATIC_STORAGE_BUCKET"
         value = "$web"
       }
       env {
@@ -100,7 +129,7 @@ resource "azurerm_container_app" "api" {
         value = "https://${local.static_hostname}"
       }
       env {
-        name  = "REDIS_URI"
+        name = "REDIS_URI"
         # Legacy Redis: "rediss://:${azurerm_redis_cache.main.primary_access_key}@${azurerm_redis_cache.main.hostname}:6380"
         value = "rediss://:${azurerm_managed_redis.managed_redis.default_database[0].primary_access_key}@${azurerm_managed_redis.managed_redis.hostname}:10000"
       }
@@ -131,6 +160,21 @@ resource "azurerm_container_app" "api" {
       env {
         name        = "MONGO_URI"
         secret_name = "mongo-uri"
+      }
+      env {
+        name        = "AUTH_SECRET"
+        secret_name = "auth-secret"
+      }
+      env {
+        name        = "INSTANCE_TOKEN"
+        secret_name = "instance-token"
+      }
+      dynamic "env" {
+        for_each = local.uses_resend ? [1] : []
+        content {
+          name        = "RESEND_API_KEY"
+          secret_name = "resend-api-key"
+        }
       }
       env {
         name  = "STORAGE_PROVIDER"
@@ -243,8 +287,8 @@ resource "azurerm_container_app" "console" {
         value = "https://${local.console_hostname}"
       }
       env {
-        name  = "NEXT_PUBLIC_AUTH0_DOMAIN"
-        value = var.auth0_domain
+        name  = "NEXT_PUBLIC_AUTH_PROVIDER"
+        value = "betterauth"
       }
       env {
         name  = "NEXT_PUBLIC_ENGINE_API_URI"
@@ -253,10 +297,6 @@ resource "azurerm_container_app" "console" {
       env {
         name  = "NEXT_PUBLIC_ENGINE_UI_URI"
         value = "https://${local.ui_hostname}"
-      }
-      env {
-        name  = "NEXT_PUBLIC_AUTH0_CLIENT_ID"
-        value = var.auth0_client_id
       }
       env {
         name  = "PORT"
@@ -364,6 +404,24 @@ resource "azurerm_container_app" "instant_tasks_worker" {
     value = var.mongo_uri
   }
 
+  secret {
+    name  = "auth-secret"
+    value = random_password.auth_secret.result
+  }
+
+  secret {
+    name  = "instance-token"
+    value = var.instance_token
+  }
+
+  dynamic "secret" {
+    for_each = local.uses_resend ? [1] : []
+    content {
+      name  = "resend-api-key"
+      value = var.resend_api_key
+    }
+  }
+
   template {
     container {
       name   = "instant-tasks-worker"
@@ -392,27 +450,34 @@ resource "azurerm_container_app" "instant_tasks_worker" {
         value = "https://${azurerm_container_app.custom_code_runner.latest_revision_fqdn}"
       }
       env {
-        name  = "AUTH0_DOMAIN"
-        value = var.auth0_domain
+        name  = "CONSOLE_BASE_URI"
+        value = "https://${local.console_hostname}"
       }
       env {
-        name  = "AUTH0_CLIENT_ID"
-        value = var.auth0_client_id
+        name  = "AUTH_PROVIDER"
+        value = "betterauth"
       }
       env {
-        name  = "AUTH0_CLIENT_SECRET"
-        value = var.auth0_client_secret
+        name  = "BETTERAUTH_EMAIL_PROVIDER"
+        value = var.betterauth_email_provider
+      }
+      dynamic "env" {
+        for_each = local.uses_resend ? [1] : []
+        content {
+          name  = "BETTERAUTH_EMAIL_FROM"
+          value = var.betterauth_email_from
+        }
       }
       env {
-        name  = "TMP_S3_BUCKET"
+        name  = "TMP_STORAGE_BUCKET"
         value = azurerm_storage_container.tmp.name
       }
       env {
-        name  = "CONNECTORS_S3_BUCKET"
+        name  = "CONNECTORS_STORAGE_BUCKET"
         value = azurerm_storage_container.connectors.name
       }
       env {
-        name  = "STATIC_S3_BUCKET"
+        name  = "STATIC_STORAGE_BUCKET"
         value = "$web"
       }
       env {
@@ -450,6 +515,21 @@ resource "azurerm_container_app" "instant_tasks_worker" {
       env {
         name        = "MONGO_URI"
         secret_name = "mongo-uri"
+      }
+      env {
+        name        = "AUTH_SECRET"
+        secret_name = "auth-secret"
+      }
+      env {
+        name        = "INSTANCE_TOKEN"
+        secret_name = "instance-token"
+      }
+      dynamic "env" {
+        for_each = local.uses_resend ? [1] : []
+        content {
+          name        = "RESEND_API_KEY"
+          secret_name = "resend-api-key"
+        }
       }
       env {
         name  = "STORAGE_PROVIDER"
@@ -497,6 +577,24 @@ resource "azurerm_container_app" "queued_tasks_worker" {
     value = var.mongo_uri
   }
 
+  secret {
+    name  = "auth-secret"
+    value = random_password.auth_secret.result
+  }
+
+  secret {
+    name  = "instance-token"
+    value = var.instance_token
+  }
+
+  dynamic "secret" {
+    for_each = local.uses_resend ? [1] : []
+    content {
+      name  = "resend-api-key"
+      value = var.resend_api_key
+    }
+  }
+
   template {
     container {
       name   = "queued-tasks-worker"
@@ -525,27 +623,34 @@ resource "azurerm_container_app" "queued_tasks_worker" {
         value = "https://${azurerm_container_app.custom_code_runner.latest_revision_fqdn}"
       }
       env {
-        name  = "AUTH0_DOMAIN"
-        value = var.auth0_domain
+        name  = "CONSOLE_BASE_URI"
+        value = "https://${local.console_hostname}"
       }
       env {
-        name  = "AUTH0_CLIENT_ID"
-        value = var.auth0_client_id
+        name  = "AUTH_PROVIDER"
+        value = "betterauth"
       }
       env {
-        name  = "AUTH0_CLIENT_SECRET"
-        value = var.auth0_client_secret
+        name  = "BETTERAUTH_EMAIL_PROVIDER"
+        value = var.betterauth_email_provider
+      }
+      dynamic "env" {
+        for_each = local.uses_resend ? [1] : []
+        content {
+          name  = "BETTERAUTH_EMAIL_FROM"
+          value = var.betterauth_email_from
+        }
       }
       env {
-        name  = "TMP_S3_BUCKET"
+        name  = "TMP_STORAGE_BUCKET"
         value = azurerm_storage_container.tmp.name
       }
       env {
-        name  = "CONNECTORS_S3_BUCKET"
+        name  = "CONNECTORS_STORAGE_BUCKET"
         value = azurerm_storage_container.connectors.name
       }
       env {
-        name  = "STATIC_S3_BUCKET"
+        name  = "STATIC_STORAGE_BUCKET"
         value = "$web"
       }
       env {
@@ -583,6 +688,21 @@ resource "azurerm_container_app" "queued_tasks_worker" {
       env {
         name        = "MONGO_URI"
         secret_name = "mongo-uri"
+      }
+      env {
+        name        = "AUTH_SECRET"
+        secret_name = "auth-secret"
+      }
+      env {
+        name        = "INSTANCE_TOKEN"
+        secret_name = "instance-token"
+      }
+      dynamic "env" {
+        for_each = local.uses_resend ? [1] : []
+        content {
+          name        = "RESEND_API_KEY"
+          secret_name = "resend-api-key"
+        }
       }
       env {
         name  = "STORAGE_PROVIDER"
@@ -638,6 +758,24 @@ resource "azurerm_container_app" "orchestrator" {
     value = var.mongo_uri
   }
 
+  secret {
+    name  = "auth-secret"
+    value = random_password.auth_secret.result
+  }
+
+  secret {
+    name  = "instance-token"
+    value = var.instance_token
+  }
+
+  dynamic "secret" {
+    for_each = local.uses_resend ? [1] : []
+    content {
+      name  = "resend-api-key"
+      value = var.resend_api_key
+    }
+  }
+
   template {
     container {
       name   = "orchestrator"
@@ -666,27 +804,34 @@ resource "azurerm_container_app" "orchestrator" {
         value = "https://${azurerm_container_app.custom_code_runner.latest_revision_fqdn}"
       }
       env {
-        name  = "AUTH0_DOMAIN"
-        value = var.auth0_domain
+        name  = "CONSOLE_BASE_URI"
+        value = "https://${local.console_hostname}"
       }
       env {
-        name  = "AUTH0_CLIENT_ID"
-        value = var.auth0_client_id
+        name  = "AUTH_PROVIDER"
+        value = "betterauth"
       }
       env {
-        name  = "AUTH0_CLIENT_SECRET"
-        value = var.auth0_client_secret
+        name  = "BETTERAUTH_EMAIL_PROVIDER"
+        value = var.betterauth_email_provider
+      }
+      dynamic "env" {
+        for_each = local.uses_resend ? [1] : []
+        content {
+          name  = "BETTERAUTH_EMAIL_FROM"
+          value = var.betterauth_email_from
+        }
       }
       env {
-        name  = "TMP_S3_BUCKET"
+        name  = "TMP_STORAGE_BUCKET"
         value = azurerm_storage_container.tmp.name
       }
       env {
-        name  = "CONNECTORS_S3_BUCKET"
+        name  = "CONNECTORS_STORAGE_BUCKET"
         value = azurerm_storage_container.connectors.name
       }
       env {
-        name  = "STATIC_S3_BUCKET"
+        name  = "STATIC_STORAGE_BUCKET"
         value = "$web"
       }
       env {
@@ -726,6 +871,21 @@ resource "azurerm_container_app" "orchestrator" {
         secret_name = "mongo-uri"
       }
       env {
+        name        = "AUTH_SECRET"
+        secret_name = "auth-secret"
+      }
+      env {
+        name        = "INSTANCE_TOKEN"
+        secret_name = "instance-token"
+      }
+      dynamic "env" {
+        for_each = local.uses_resend ? [1] : []
+        content {
+          name        = "RESEND_API_KEY"
+          secret_name = "resend-api-key"
+        }
+      }
+      env {
         name  = "STORAGE_PROVIDER"
         value = "abs"
       }
@@ -751,6 +911,11 @@ resource "azurerm_log_analytics_workspace" "main" {
 
 # Random passwords for secrets
 resource "random_password" "secret" {
+  length  = 32
+  special = false
+}
+
+resource "random_password" "auth_secret" {
   length  = 32
   special = false
 }
